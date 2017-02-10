@@ -1,4 +1,4 @@
-
+[![wercker status](https://app.wercker.com/status/6b62b029e781f9cd48f7df7feb84a87a/s/master "wercker status")](https://app.wercker.com/project/byKey/6b62b029e781f9cd48f7df7feb84a87a)
 
 # HW4: Getting Started
 
