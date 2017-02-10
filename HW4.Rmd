@@ -3,8 +3,8 @@ title: "HW4: Team [my team #/name here]"
 author: "[My team member names here]"
 date: "Due February 17, 2016"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
 ---
 
 
