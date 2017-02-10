@@ -97,7 +97,7 @@ the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) 
 20.  Gamma mixtures of Poissons:  From class we said that
 \begin{align}
 Y \mid \lambda & \sim P(\lambda) \\
-p(y \mid \lambda) & = \frac{y^\lambda e^{-\lambda}} {y!} \\
+p(y \mid \lambda) & = \frac{\lambda^y e^{-\lambda}} {y!} \\
 & \\
 \lambda \mid \mu, \theta & \sim G(\theta, \theta/\mu)  \\
 p(\lambda \mid  \mu, \theta) & = \frac{(\theta/ \mu)^\theta}{\Gamma(\theta)} \lambda^{\theta - 1} e^{- \lambda \theta/\mu} \\
