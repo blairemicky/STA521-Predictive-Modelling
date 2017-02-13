@@ -1,6 +1,6 @@
 ---
-title: "HW4: Team [my team #/name here]"
-author: "[My team member names here]"
+title: "HW4: Team 12"
+author: "Thomas Fleming, Blaire Li, Marc Ryser, Hengqian Zhang"
 date: "Due February 17, 2016"
 output:
   html_notebook: default
@@ -67,11 +67,20 @@ where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where 
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
-
-
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  
 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
+
+```{r}
+rmse = function(y, yhat) {
+rmse = sqrt(mean((y - yhat)^2))
+return(rmse)
+}
+
+#rmse(College.test$y, poi.yhat.train)
+
+#rmse(College.test$y, poi.yhat.test)
+```
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
