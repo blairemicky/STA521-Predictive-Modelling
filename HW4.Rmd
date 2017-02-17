@@ -22,12 +22,16 @@ Load the college application data from Lab1 and create the variable `Elite` by b
 
 ```{r data}
 data(College)
-College = College %>% 
-  mutate(college = rownames(College)) %>%
-  mutate(Elite = factor(Top10perc > 50)) %>%
-  mutate(Elite = 
-           recode(Elite, 'TRUE' = "Yes", 'FALSE'="No")) %>%
-  select(c(-Accept, -Enroll))
+View(College)
+College = College %>% mutate(college = rownames(College)) %>%
+                      mutate(Elite = factor(Top10perc > 50)) %>%
+                      mutate(Elite = 
+                               recode(Elite, 'TRUE' = "Yes", 'FALSE'="No")) %>%
+                      dplyr::select(c(-Accept,-Enroll))
+                      
+
+
+colnames(College)
 ```
 
 We are going to create a training and test set by randomly splitting the data.  First set a random seed by
@@ -46,17 +50,32 @@ College.test = College[-train,]
 1.  Summarize the training and test data, and comment on which variables are numeric, factors or that could be treated as either.
 Comment on whether the summaries appear to be similar across the test and training data sets.
 
+```{r}
+
+```
+
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
+```{r}
+
+```
 
 3.  Build a linear regression model to predict `Apps` from the other predictors (without any transformations).  Present model summaries and diagnostic plots.   Based on diagnostic plots  using residuals,  comment on the  adequacy of your model.
+```{r}
 
+```
 
 
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
+```{r}
+
+```
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
+```{r}
+
+```
 
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
