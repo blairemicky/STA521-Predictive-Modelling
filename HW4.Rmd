@@ -1,10 +1,10 @@
 ---
-title: "HW4: Team 12"
+title: 'HW4: Team 12'
 author: "Thomas Fleming, Blaire Li, Marc Ryser, Hengqian Zhang"
 date: "Due February 17, 2016"
 output:
-  html_notebook: default
   pdf_document: default
+  html_notebook: default
 ---
 
 
@@ -65,11 +65,18 @@ From the summaries given above, variables in both train set and test set have si
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
 ```{r}
-
+ggplot(data = College.train, aes(y=Apps, x = Outstate))+
+  geom_point()
 ```
 
 3.  Build a linear regression model to predict `Apps` from the other predictors (without any transformations).  Present model summaries and diagnostic plots.   Based on diagnostic plots  using residuals,  comment on the  adequacy of your model.
 ```{r}
+
+lm_c = lm(Apps ~.-college, data  = College.train)
+
+summary(lm_c)
+plot(lm_c)
+
 
 ```
 
