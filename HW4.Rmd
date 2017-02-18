@@ -242,12 +242,7 @@ While the residual plot shows a fairly uniform distribution and all variables ar
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
 
 ```{r}
-S <- stheta.a.mc1000 <- t.s.a.mc1000 <- 1000
-for (s in 1:S) {
-  stheta.a.mc1000[s] <- rgamma(1, a.a + sigma.y.a, b.a + n.a)
-  sy.a <- rpois(10, stheta.a.mc1000[s])
-  t.s.a.mc1000[s] <- mean(sy.a)/sd(sy.a, na.rm = FALSE)
-}
+
 ```
 
 
