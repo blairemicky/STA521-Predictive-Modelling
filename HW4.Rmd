@@ -123,6 +123,7 @@ ANSWER: From the residual plot vs fitted value, residuals increases as the fitte
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
 
 ```{r}
+set.seed(1)
 #rmse function
 rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
@@ -225,6 +226,7 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
 ```{r}
+set.seed(1)
 app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + Top25perc + 
                                        log(F.Undergrad) + log(P.Undergrad) + Outstate + 
                                        Room.Board + log(PhD) + log(S.F.Ratio) + 
@@ -320,6 +322,8 @@ With an RMSE of 'r RMSE.best' the out of sample prediction is better for the mod
 
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
+
+ANSWER:
 ```{r}
 par(mfrow=c(1,2))
 plot(GGPLOT.0+geom_vline(xintercept = RMSE.0.test, col="yellow"))
@@ -330,7 +334,7 @@ plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
 ```{r}
-Apps.poi = glm(Apps ~ . -Apps -college, family = poisson(link = "log"), data = College.train)
+Apps.poi = glm(Apps ~ .  -college, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
 plot(Apps.poi)
 ```
@@ -341,19 +345,19 @@ While the residual plot shows a fairly uniform distribution and all variables ar
 ```{r}
 S = 1000
 beta = sim(Apps.poi, n.sims = 1000)
-X = model.matrix(Apps ~ . -Apps -college, data = College.train)
+X = model.matrix(Apps.poi)
 Y = matrix(NA, nrow(College.train), ncol = S)
 
 rmse.train.poi = rmse(predict(Apps.poi), College.train$Apps)
-rmse.rep.poi = rep(0, S)
+rmse.rep.poi = numeric(S)
 
 for (s in 1:S) {
-  Y[, s] = exp(X %*% beta@coef[s,]) + rnorm(1, 0, beta@sigma[s])
+  lambda = exp(X %*% beta@coef[s,]) 
+  Y[, s] = rpois(nrow(College.train),lambda)
   rmse.rep.poi[s] = rmse(predict(Apps.poi), Y[, s] )
 }
 
-rmse.df = data.frame(rsme.train.poi = rmse.train.poi, rmse.rep.poi = rmse.rep.poi)
-rmse.df
+
 rmse.rep.poi = as.data.frame(rmse.rep.poi)
 
 hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.poi, col="red")
