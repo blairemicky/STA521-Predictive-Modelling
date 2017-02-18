@@ -234,15 +234,13 @@ rmse = function(y, ypred){
   return(rmse)
 }
 
-X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
-                                       log(F.Undergrad) + log(P.Undergrad) + Outstate + 
-                                       Room.Board + log(PhD) + log(S.F.Ratio) + 
-                                       log(Expend) + Grad.Rate + Private:Room.Board + 
-                                       log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
-                                       log(P.Undergrad):Outstate + Outstate:log(Expend) + 
-                                       Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-                                       log(Expend):Grad.Rate, 
-                                       data = College.train)
+X<-model.matrix( log(Apps) ~ Private + log(Top10perc) + Top25perc + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(PhD) + log(S.F.Ratio) + log(Expend) + Grad.Rate + Private:Room.Board + 
+    log(Top10perc):Top25perc + log(Top10perc):log(Expend) + log(P.Undergrad):Outstate + 
+    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
+    log(Expend):Grad.Rate, data = College.train)
+
 params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
