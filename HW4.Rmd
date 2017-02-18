@@ -96,14 +96,13 @@ RMSE.2<-as.data.frame(RMSE.2)
 
 
 RMSE.1<-rmse(College.train$Apps,predict(apps.lm0))
-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1)
- 
+GGPLOT.0<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
+print(GGPLOT.0)
 
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
-*Used the function from Model Comparison slides in classes for rsme function
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
@@ -144,7 +143,6 @@ termplot(apps.best, data=College.train,partial.resid=T, smooth=panel.smooth, se=
 
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
-
 ```{r}
 
 nsim=1000
@@ -153,7 +151,7 @@ rmse = function(y, ypred){
   return(rmse)
 }
 
-X<-model.matrix( log(Apps) ~ Private + Top25perc + log(F.Undergrad) + 
+X<-model.matrix(log(Apps) ~ Private + Top25perc + log(F.Undergrad) + 
     log(P.Undergrad) + Outstate + Room.Board + log(Books) + log(Personal) + 
     log(PhD) + log(Expend) + Grad.Rate + Private:Room.Board + 
     Top25perc:log(Books) + log(P.Undergrad):Outstate + Outstate:log(Expend) + 
@@ -165,27 +163,71 @@ RMSE.2<-rep(0,nsim)
 # note that we had log-transformed the response; hence we need to exponentiate the simulated responses
 for(j in 1:nsim){
 Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
-RMSE.2[j]<-rmse(Y[,j],predict(apps.best))
+RMSE.2[j]<-rmse(Y[,j],exp(predict(apps.best)))
   
 }
 RMSE.2<-as.data.frame(RMSE.2)
 
 
-RMSE.1<-rmse(College.train$Apps,predict(apps.best))
-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
- 
+RMSE.1<-rmse(College.train$Apps,exp(predict(apps.best)))
+GGPLOT.best<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
+print(GGPLOT.best)
 
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
-
 We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
 where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
+
+ANSWER: First we plot the predictions for the base model with main effects only, and the 'best' model obtained by BIC. We found that a few predictions have an excessively high residual, so we remove those from the plot.
+```{r}
+apps.lm0<-lm(Apps~., data=College.train[,-17])
+a.new<-predict(apps.lm0, newdata = College.test[,-17])
+b.new<-predict(apps.best, newdata=College.test)
+
+# all of the points
+#par(mfrow=c(1,2))
+#plot(a.new,a.new-College.test$Apps)
+#plot(exp(b.new), exp(b.new)-College.test$Apps)
+
+# remove those with residual > 8000
+ind.a<-which(abs(a.new-College.test$Apps)>8000)
+ind.b<-which(abs(exp(b.new)-College.test$Apps)>8000)
+
+par(mfrow=c(1,2))
+plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a])
+plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b])
+
+print(College$college[ind.a])
+print(College$college[ind.b])
+
+
+```
+The wors fits (residual >8000) are for  "Antioch University"  and  "College of Saint Catherine" for the base model, and additionally for "Dordt College" in the 'best' linear  model. Next, we compute the RMSE of the test data.
+
+```{r}
+RMSE.0.test<-sqrt(mean((a.new-College.test$Apps)^2))
+RMSE.best.test<-sqrt(mean((exp(b.new)-(College.test$Apps))^2))
+
+print(RMSE.0.test)
+print(RMSE.best.test)
+```
+
+With an RMSE of 'r RMSE.best' the out of sample prediction is better for the model with interactions and transformations compared to the base model which has an RMSE of 'r RMSE.0'.
+
+
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
+
+```{r}
+par(mfrow=c(1,2))
+plot(GGPLOT.0+geom_vline(xintercept = RMSE.0.test, col="yellow"))
+plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
+
+```
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
