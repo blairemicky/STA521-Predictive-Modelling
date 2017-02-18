@@ -118,7 +118,7 @@ plot(app_lm, labels.id = College.train$college)
 
 
 ```
-ANSWER: From the residual plot vs fitted value, residuals increases as the fitted value increase. From the QQplot, there is clear heavy tail. From scale-location plot, we can a liear trend between standardized residula and fitted value. Therefore, we can conclude linear model without transformation and interaction term is not adequate.
+ANSWER: From the residual plot vs fitted value, we see that the residual variance increases. The model predicts negative Apps, which is not meaningful. From the QQplot, there is clear heavy tail. From scale-location plot, we can see an increasing, linear trend of the standardized residuals vs fitted values. Therefore, we can conclude that a linear model without transformations and/or interactions is not adequate.
 
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
 
@@ -153,7 +153,7 @@ RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 #plot the histogram 
 GGPLOT.0 = ggplot(data= RMSE.2, aes(x=RMSE.2))+
              geom_histogram() + 
-             geom_vline(xintercept = RMSE.1)
+             geom_vline(xintercept = RMSE.1, col="red")
 
 plot(GGPLOT.0)
 #compute p-value
@@ -161,16 +161,14 @@ pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
-Answer: based on the p-value for RMSE and histogram, we could not reject this model.
+ANSWER: The RMSE of the observed data is not inconsistent with the simulated model. In fact the tail probability, or p-value, of 'r pval' for RMSE is too large to not reject this model (based on this particular statistic).
 
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 
 
-ANSWER:
-
-First we do log transformation on 'Apps'. From the residual plot, we can see the residual plot is much better than non-transform one. We applied boxcox procedue to find the best y tranformation. And we can see 0 is close to the best parameter. For better intepratation of y, we admit log transformation on y.
+ANSWER: First we do log transformation on 'Apps'. From the residual plot, we can see that the residual plot is much better than for the non-trannon-transform one. We applied boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. For better intepratation of y, we admit log transformation on y.
 
 ```{r}
 #log transformation on y
@@ -209,7 +207,7 @@ app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +
                            log(Expend) + Grad.Rate+ Elite)^2, 
                            data=College.train)
 
-#our best linear model
+#our best linear model using BIC
 app_best = step(app_lm_t2, k=log(nrow(College.train)))
 
 summary(app_best)
