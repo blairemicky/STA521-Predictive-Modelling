@@ -189,6 +189,13 @@ where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where 
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
+```{r}
+Apps.poi = glm(Apps ~ . -Apps -college, data = College$train, family = poisson(link = "log"))
+summary(Apps.poi)
+plot(Apps.poi)
+```
+
+
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  
 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
@@ -206,9 +213,6 @@ Apps.poi.trans <- glm(Apps ~ . -Apps - college, family = poisson(link = "log"), 
 summary(Apps.poi.trans)
 plot(Apps.poi.trans)
 ```
-
-
-12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit. Is there evidence of overdispersion?  Explain.
 
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
