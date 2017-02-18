@@ -110,6 +110,7 @@ pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
+
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 ```{r}
@@ -118,7 +119,8 @@ Comment on  how well the assumptions are met and and issues that diagnostic plot
 
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
-7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
+7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data.
+
 where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
