@@ -151,10 +151,11 @@ RMSE.2 = data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
 #plot the histogram 
-ggplot(data= RMSE.2, aes(x=RMSE.2))+
-  geom_histogram(color = "firebrick") + 
-  geom_vline(xintercept = RMSE.1)
+GGPLOT.0 = ggplot(data= RMSE.2, aes(x=RMSE.2))+
+             geom_histogram() + 
+             geom_vline(xintercept = RMSE.1)
 
+plot(GGPLOT.0)
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -273,7 +274,7 @@ ANSWER: First we plot the predictions for the base model with main effects only,
 ```{r}
 apps.lm0<-lm(Apps~., data=College.train[,-17])
 a.new<-predict(apps.lm0, newdata = College.test[,-17])
-b.new<-predict(apps.best, newdata=College.test)
+b.new<-predict(app_lm_best, newdata=College.test)
 
 # all of the points
 #par(mfrow=c(1,2))
@@ -285,8 +286,14 @@ ind.a<-which(abs(a.new-College.test$Apps)>8000)
 ind.b<-which(abs(exp(b.new)-College.test$Apps)>8000)
 
 par(mfrow=c(1,2))
-plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a])
-plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b])
+plot(x = a.new[-ind.a], y = a.new[-ind.a]-College.test$Apps[-ind.a],
+     ylab = "residual", 
+     xlab = "fitted value",
+     main = "residual vs fitted value(main effect)")
+plot(x = exp(b.new[-ind.b]), y = exp(b.new[-ind.b])-College.test$Apps[-ind.b],
+     ylab = "residual", 
+     xlab = "fitted value",
+     main = "residual vs fitted value(best)")
 
 print(College$college[ind.a])
 print(College$college[ind.b])
