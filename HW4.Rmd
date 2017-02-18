@@ -107,7 +107,36 @@ print(pval)
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
+
+
 ```{r}
+# The base model with predictor transformations based on their respective ranges
+apps.lm1<-lm(Apps ~ Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite, data=College.train)
+summary(apps.lm1)
+plot(apps.lm1)
+
+# Use BoxCox to find best tranformation for response (here lambda \approx 0 so log(y) is good)
+boxcox(apps.lm1) 
+
+apps.lm2<-lm(log(Apps) ~ Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite, data=College.train)
+summary(apps.lm2)
+plot(apps.lm2,labels.id = College.train$college)
+
+
+# Systematic check for interactions
+apps.lm3<-lm(log(Apps) ~ (Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite)^2, data=College.train)
+
+apps.best<-step(apps.lm3, k=log(nrow(College.train))) # use BIC
+
+# Summarize the plots
+summary(apps.best)
+par(mfrow=c(2,2))
+plot(apps.best,labels.id = College.train$college)
+
+# Termplots for further diagnostics
+par(mfrow=c(4,4))
+termplot(apps.best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T)
+
 
 ```
 
