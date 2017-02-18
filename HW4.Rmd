@@ -140,7 +140,47 @@ termplot(apps.best, data=College.train,partial.resid=T, smooth=panel.smooth, se=
 
 ```
 
+
+
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
+
+
+```{r}
+
+nsim=1000
+rmse = function(y, ypred){
+  rmse=sqrt(mean((y-ypred)^2))
+  return(rmse)
+}
+
+X<-model.matrix( log(Apps) ~ Private + Top25perc + log(F.Undergrad) + 
+    log(P.Undergrad) + Outstate + Room.Board + log(Books) + log(Personal) + 
+    log(PhD) + log(Expend) + Grad.Rate + Private:Room.Board + 
+    Top25perc:log(Books) + log(P.Undergrad):Outstate + Outstate:log(Expend) + 
+    Room.Board:log(Expend) + log(Books):log(Personal) + log(Books):Grad.Rate + 
+    log(PhD):Grad.Rate)
+params<-sim(apps.best, nsim)
+Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
+RMSE.2<-rep(0,nsim)
+# note that we had log-transformed the response; hence we need to exponentiate the simulated responses
+for(j in 1:nsim){
+Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+RMSE.2[j]<-rmse(Y[,j],predict(apps.best))
+  
+}
+RMSE.2<-as.data.frame(RMSE.2)
+
+
+RMSE.1<-rmse(College.train$Apps,predict(apps.best))
+ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
+ 
+
+pval<-sum(RMSE.2>RMSE.1)/nsim
+print(pval)
+
+```
+
+We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
 where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
