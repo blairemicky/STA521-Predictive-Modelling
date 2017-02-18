@@ -224,10 +224,22 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
-<<<<<<< HEAD
+```{r}
+app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + Top25perc + 
+                                       log(F.Undergrad) + log(P.Undergrad) + Outstate + 
+                                       Room.Board + log(PhD) + log(S.F.Ratio) + 
+                                       log(Expend) + Grad.Rate + Private:Room.Board + 
+                                       log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
+                                       log(P.Undergrad):Outstate + Outstate:log(Expend) + 
+                                       Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
+                                       log(Expend):Grad.Rate, 
+                                       data = College.train)
+```
+
+
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data.
 
-=======
+
 ```{r}
 
 nsim=1000
