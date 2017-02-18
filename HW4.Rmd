@@ -133,7 +133,7 @@ return(rmse)
 #rmse(College.test$y, poi.yhat.test)
 ```
 
-12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
+12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit. Is there evidence of overdispersion?  Explain.
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
@@ -154,6 +154,8 @@ the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) 
 
 19.   We have said that the residual deviance has a $\chi^2$ distribution with $n - p - 1$  degrees of freedom (n - the number of parameters) if the model is correct.   What is the mean and standard deviation of the residual deviance?    Use the Empirical Rule to suggest an easy to use cut-off for suggesting overdispersion that you can calculate without a calculator.
 
+ ANSWER: mean is n-p-1, and the variance is $\sqrt{2(n-p-1)}$
+ 
 20.  Gamma mixtures of Poissons:  From class we said that
 \begin{align}
 Y \mid \lambda & \sim P(\lambda) \\
@@ -170,4 +172,21 @@ Y \mid \mu, \theta & \sim NB(\mu, \theta)
 \end{align}
 Derive the density of $Y \mid \mu, \theta$ in (8) showing your work using LaTeX expressions.  (Note this may not display if the output format is html, so please use pdf.)
 Using iterated expectations with the Gamma-Poisson mixture, find the mean and variance of $Y$, showing your work.
+\begin{align}
+p(Y \mid \mu, \theta) & = \int p(Y \mid \lambda) p(\lambda \mid \theta, \theta/\mu) d \lambda \\
+& = \int \frac{\lambda^y e^{-\lambda}} {y!}\frac{(\theta/ \mu)^\theta}{\Gamma(\theta)} \lambda^{\theta - 1} e^{- \lambda \theta/\mu} d \lambda \\
+& = \frac{(\theta/ \mu)^\theta}{\Gamma(\theta)y!} \int\lambda^{y+\theta - 1} e^{- \lambda (\theta/\mu+1)} d \lambda \\
+& = \frac{(\theta/ \mu)^\theta}{\Gamma(\theta)y!} \frac{\Gamma(y+\theta)}{(1+\theta / \mu)^{\theta+y}} \\
+& =  \frac{ \Gamma(y + \theta)}{y! \Gamma(\theta)}
+\left(\frac{\theta}{\theta + \mu}\right)^{\theta}
+\left(\frac{\mu}{\theta + \mu}\right)^{y} \\
+E(Y) &= E[E(y \mid \lambda)] \\
+&= E[\lambda] \\
+&= \frac{\theta}{\theta / \mu} \\
+&= \mu \\
+Var(Y) &= E[Var(Y \mid \lambda)] + Var[E(Y \mid \lambda)] \\
+&= E(\lambda) + Var(\lambda)\\
+& = \mu + \frac{\theta}{\theta^2 / \mu^2}\\
+& = \mu + \frac{\mu^2}{\theta}
+\end{align}
 
