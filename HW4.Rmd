@@ -25,8 +25,8 @@ data(College)
 View(College)
 College = College %>% mutate(college = rownames(College)) %>%
                       mutate(Elite = factor(Top10perc > 50)) %>%
-                      mutate(Elite = 
-                               recode(Elite, 'TRUE' = "Yes", 'FALSE'="No")) %>%
+#                      mutate(Elite = 
+ #                              car::recode(Elite, "TRUE" = "Yes", "FALSE" ="No")) #%>%
                       dplyr::select(c(-Accept,-Enroll))
                       
 
@@ -190,13 +190,24 @@ where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
 ```{r}
-Apps.poi = glm(Apps ~ . -Apps -college, data = College$train, family = poisson(link = "log"))
+attach(College.train)
+Apps.poi = glm(Apps ~ . -Apps -college, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
 plot(Apps.poi)
 ```
+While the residual plot shows a fairly uniform distribution and all variables are labeled as being signficant, some of the standard deviance residuals are huge- indicating some cause for concern- though the observations mostly stay on the line in the Normal Q-Q plot.
 
+10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
 
-10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  
+```{r}
+S <- stheta.a.mc1000 <- t.s.a.mc1000 <- 1000
+for (s in 1:S) {
+  stheta.a.mc1000[s] <- rgamma(1, a.a + sigma.y.a, b.a + n.a)
+  sy.a <- rpois(10, stheta.a.mc1000[s])
+  t.s.a.mc1000[s] <- mean(sy.a)/sd(sy.a, na.rm = FALSE)
+}
+```
+
 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
 
@@ -209,7 +220,8 @@ hist.poi = hist.poi + geom_vline(xintercept = rsme.test, colour = "cornflowerblu
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
 ```{r}
-Apps.poi.trans <- glm(Apps ~ . -Apps - college, family = poisson(link = "log"), data = College.train)
+#Poisson using an offset
+Apps.poi.trans <- glm(Apps ~ . -Apps - P.Undergrad - college, family = poisson(link = "log"), data = College.test)
 summary(Apps.poi.trans)
 plot(Apps.poi.trans)
 ```
