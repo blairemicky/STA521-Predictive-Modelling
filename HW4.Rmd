@@ -232,7 +232,7 @@ plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
 ```{r}
-Apps.poi = glm(Apps ~ . -Private -Apps -college -Elite, family = poisson(link = "log"), data = College.train)
+Apps.poi = glm(Apps ~ . -Apps -college, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
 plot(Apps.poi)
 ```
@@ -243,19 +243,26 @@ While the residual plot shows a fairly uniform distribution and all variables ar
 ```{r}
 S = 1000
 beta = sim(Apps.poi, n.sims = 1000)
-X = model.matrix(Apps ~ . -Private -Apps -college -Elite, data = College.train)
+X = model.matrix(Apps ~ . -Apps -college, data = College.train)
 Y = matrix(NA, nrow(College.train), ncol = S)
 
-rmse.train.poi = rmse(predict(Apps.poi), College.train)
-rmse.rep.poi = matrix(NA, 1, ncol=1000)
+rmse.train.poi = rmse(predict(Apps.poi), College.train$Apps)
+rmse.rep.poi = rep(0, S)
 
 for (s in 1:S) {
-  Y[, s] = exp(X %*% beta@coef[s,]) + rnorm(1, 0, 1)
-  rmse.rep.poi[s] = rmse(predict(Apps.poi, data = College.train), Y[, i] )
+  Y[, s] = exp(X %*% beta@coef[s,]) + rnorm(1, 0, beta@sigma[s])
+  rmse.rep.poi[s] = rmse(predict(Apps.poi), Y[, s] )
 }
 
-rmse.df = data.frame(train.poi = rmse.train.poi, rep.poi = rmse.rep.poi)
+rmse.df = data.frame(rsme.train.poi = rmse.train.poi, rmse.rep.poi = rmse.rep.poi)
 rmse.df
+rmse.rep.poi = as.data.frame(rmse.rep.poi)
+
+hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram() + geom_vline(xintercept = rmse.train.poi, col="red")
+print(hist.poi)
+
+pval <-sum(rmse.rep.poi > rmse.train.poi)/S
+print(pval)
 ```
 
 
