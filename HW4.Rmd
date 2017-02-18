@@ -103,13 +103,84 @@ pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
+*Used the function from Model Comparison slides in classes for rsme function
+
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
+
+
 ```{r}
+# The base model with predictor transformations based on their respective ranges
+apps.lm1<-lm(Apps ~ Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite, data=College.train)
+summary(apps.lm1)
+plot(apps.lm1)
+
+# Use BoxCox to find best tranformation for response (here lambda \approx 0 so log(y) is good)
+boxcox(apps.lm1) 
+
+apps.lm2<-lm(log(Apps) ~ Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite, data=College.train)
+summary(apps.lm2)
+plot(apps.lm2,labels.id = College.train$college)
+
+
+# Systematic check for interactions
+apps.lm3<-lm(log(Apps) ~ (Private + log(Top10perc) + Top25perc + log(F.Undergrad) +  log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal)+log(PhD)+log(Terminal)+ log(S.F.Ratio)+ (perc.alumni) +   log(Expend) + Grad.Rate+Elite)^2, data=College.train)
+
+apps.best<-step(apps.lm3, k=log(nrow(College.train))) # use BIC
+
+# Summarize the plots
+summary(apps.best)
+par(mfrow=c(2,2))
+plot(apps.best,labels.id = College.train$college)
+
+# Termplots for further diagnostics
+par(mfrow=c(4,4))
+termplot(apps.best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T)
+
 
 ```
 
+
+
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
+
+
+```{r}
+
+nsim=1000
+rmse = function(y, ypred){
+  rmse=sqrt(mean((y-ypred)^2))
+  return(rmse)
+}
+
+X<-model.matrix( log(Apps) ~ Private + Top25perc + log(F.Undergrad) + 
+    log(P.Undergrad) + Outstate + Room.Board + log(Books) + log(Personal) + 
+    log(PhD) + log(Expend) + Grad.Rate + Private:Room.Board + 
+    Top25perc:log(Books) + log(P.Undergrad):Outstate + Outstate:log(Expend) + 
+    Room.Board:log(Expend) + log(Books):log(Personal) + log(Books):Grad.Rate + 
+    log(PhD):Grad.Rate)
+params<-sim(apps.best, nsim)
+Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
+RMSE.2<-rep(0,nsim)
+# note that we had log-transformed the response; hence we need to exponentiate the simulated responses
+for(j in 1:nsim){
+Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+RMSE.2[j]<-rmse(Y[,j],predict(apps.best))
+  
+}
+RMSE.2<-as.data.frame(RMSE.2)
+
+
+RMSE.1<-rmse(College.train$Apps,predict(apps.best))
+ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
+ 
+
+pval<-sum(RMSE.2>RMSE.1)/nsim
+print(pval)
+
+```
+
+We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
 where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
@@ -123,23 +194,83 @@ where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
 
 ```{r}
-rmse = function(y, yhat) {
-rmse = sqrt(mean((y - yhat)^2))
-return(rmse)
-}
-
-#rmse(College.test$y, poi.yhat.train)
-
-#rmse(College.test$y, poi.yhat.test)
+rsme.test = rmse(College.test$Apps, poi.yhat.train)
+hist.poi = hist.poi + geom_vline(xintercept = rsme.test, colour = "cornflowerblue")
 ```
+*Used function from Model Comparison slides in class for RMSE
+
+12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
+
+```{r}
+Apps.poi.trans <- glm(Apps ~ . -Apps - college, family = poisson(link = "log"), data = College.train)
+summary(Apps.poi.trans)
+plot(Apps.poi.trans)
+```
+
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit. Is there evidence of overdispersion?  Explain.
 
+
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
+
+```{r}
+beta <- sim(Apps.poi.trans, n.sims = 1000)
+X <- model.matrix(Apps ~ . -Apps -college, data=College.train)
+Y <- matrix(NA, nrow(College.train), ncol=1000)
+
+rmse_rep <- matrix(NA, 1, ncol=1000)
+rmse_pred = rmse(predict(Apps.poi.trans), College.test$Apps)
+
+#Is it rmse from lm and new data set; or from lm predicted on previously generated data set vs. new data set?
+for (i in 1:1000) {
+Y[, i] <- X %*% beta@coef[i,] + rnorm(1, 0, beta@sigma[i])
+rmse_rep[i] <- rmse(predict(Apps.lm, data = Y[, i-1]), Y[,i])
+}
+
+rmse_rep <- as.data.frame(t(rmse_rep))
+rmse_rep
+ggplot(data = rmse_rep, aes(x = rmse_rep)) + geom_histogram() + geom_vline(xintercept = rmse_obs)
+
+pval <- sum(rmse_rep > rmse_obs)/1000
+pval
+```
+
+
 
 14. Build a model using the negative binomial model (consider transformations and interactions if needed) and examine diagnostic plots.  Are there any suggestions of problems with this model?
 
-15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?  
+```{r}
+Apps.nb <- glm.nb(Apps ~ . -Apps -college, data = College, link = log)
+summary(Apps.nb)
+plot(Apps.nb)
+```
+
+
+15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?
+
+```{r}
+beta <- sim(Apps.nb, n.sims = 1000)
+X <- model.matrix(Apps ~ . -Apps -college, data=College.train)
+Y <- matrix(NA, nrow(College.train), ncol=1000)
+
+rmse_rep <- matrix(NA, 1, ncol=1000)
+rmse.obs.nb = rmse(predict(Apps.nb), College$Apps)
+rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
+
+#Is it rmse from lm and new data set; or from lm predicted on previously generated data set vs. new data set?
+for (i in 1:1000) {
+Y[, i] <- X %*% beta@coef[i,] + rnorm(1, 0, beta@sigma[i])
+rmse_rep[i] <- rmse(predict(Apps.lm, data = Y[, i-1]), Y[,i])
+}
+
+rmse_rep <- as.data.frame(t(rmse_rep))
+rmse_rep
+ggplot(data = rmse_rep, aes(x = rmse_rep)) + geom_histogram() + geom_vline(xintercept = rmse_obs)
+
+pval <- sum(rmse_rep > rmse_obs)/1000
+pval
+```
+
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
@@ -154,8 +285,15 @@ the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) 
 
 19.   We have said that the residual deviance has a $\chi^2$ distribution with $n - p - 1$  degrees of freedom (n - the number of parameters) if the model is correct.   What is the mean and standard deviation of the residual deviance?    Use the Empirical Rule to suggest an easy to use cut-off for suggesting overdispersion that you can calculate without a calculator.
 
- ANSWER: mean is n-p-1, and the variance is $\sqrt{2(n-p-1)}$
- 
+ANSWER: The residual deviance has mean  $n-p-1$ and standard deviation $\sqrt{2(n-p-1)}$ (basic results from distribution theory). By definition of a $\Chi^2$, the residual deviance is equal in distribution to $\sum_{i=1}^{n-p-1} Z_i^2$ where $Z_i$ are i.i.d. standard normals. By virtue of the CLT, we have for large residual degrees of freedom $df=n-p-1$,
+$$ \sqrt{n-p-1} \left( \frac{\sum_{i=1}^{n-p-1} Z_i^2}{n-p-1}-1\right) \approx \mathcal{N}(0, 2).$$
+Therefore, we have that the residual deviance $D$ divided by $df$ satisfies
+$$\frac{D}{df}-1 \approx \mathcal{N}(0, \frac{2}{df})$$
+Using the Empirical Rule (95% confidence interval approximated by $\pm 2\sigma$ for normal), we derive a heuristic cutoff of 
+$$ \frac{D}{f}> 1+ 2 \sqrt{\frac{2}{df}}=1+ \sqrt{\frac{8}{df}}.$$
+
+
+
 20.  Gamma mixtures of Poissons:  From class we said that
 \begin{align}
 Y \mid \lambda & \sim P(\lambda) \\
@@ -180,7 +318,7 @@ p(Y \mid \mu, \theta) & = \int p(Y \mid \lambda) p(\lambda \mid \theta, \theta/\
 & =  \frac{ \Gamma(y + \theta)}{y! \Gamma(\theta)}
 \left(\frac{\theta}{\theta + \mu}\right)^{\theta}
 \left(\frac{\mu}{\theta + \mu}\right)^{y} \\
-E(Y) &= E[E(y \mid \lambda)] \\
+E(Y) &= E[E(Y \mid \lambda)] \\
 &= E[\lambda] \\
 &= \frac{\theta}{\theta / \mu} \\
 &= \mu \\
