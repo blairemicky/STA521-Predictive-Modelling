@@ -15,6 +15,7 @@ suppressMessages(library(ggplot2))
 suppressMessages(library(dplyr))
 suppressMessages(library(GGally))
 library(knitr)
+library(mvtnorm)
 # post on piazza for additional packages if there are wercker build errors due to missing packages
 ```
 
@@ -22,16 +23,12 @@ Load the college application data from Lab1 and create the variable `Elite` by b
 
 ```{r data}
 data(College)
-View(College)
-College = College %>% mutate(college = rownames(College)) %>%
-                      mutate(Elite = factor(Top10perc > 50)) %>%
-                      mutate(Elite = 
-                               recode(Elite, 'TRUE' = "Yes", 'FALSE'="No")) %>%
-                      dplyr::select(c(-Accept,-Enroll))
-                      
-
-
-colnames(College)
+College = College %>% 
+  mutate(college = rownames(College)) %>%
+  mutate(Elite = factor(Top10perc > 50)) %>%
+  mutate(Elite = 
+           recode(Elite, 'TRUE' = "Yes", 'FALSE'="No")) %>%
+  select(c(-Accept, -Enroll))
 ```
 
 We are going to create a training and test set by randomly splitting the data.  First set a random seed by
@@ -50,29 +47,30 @@ College.test = College[-train,]
 1.  Summarize the training and test data, and comment on which variables are numeric, factors or that could be treated as either.
 Comment on whether the summaries appear to be similar across the test and training data sets.
 
-```{r}
-#summary for training set
-summary(College.train[,-17])
-
-#summary for test set
-summary(College.test[,-17])
-
-```
-Answer: catergorical variables: Private, Elite. College name should not be treated as a variable. All other variables left should be treated as numerical variables. 
-
-From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce biase since private school and public school have many difference.
-
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
-```{r}
 
+- look at diagonal to identify predictors that should be on log scale: F.undergrad; P.undergrad; boods; expend. Maybe also: Top10, Personal, PhD and S.f.Ratio
+- There are some outliers: very high value in P.undergrad, books, S.F.Ratio, expend
+- there are some nonlinear relationships: example: PhD
+
+```{r}
+ggpairs(College.train[,c(3:5,2)])
+ggpairs(College.train[,c(6:8,2)])
+ggpairs(College.train[,c(9:11,2)])
+ggpairs(College.train[,c(12:14,2)])
+ggpairs(College.train[,c(15:16,18,2)])
 ```
+
 
 3.  Build a linear regression model to predict `Apps` from the other predictors (without any transformations).  Present model summaries and diagnostic plots.   Based on diagnostic plots  using residuals,  comment on the  adequacy of your model.
+
+
 ```{r}
-
+apps.lm0<-lm(Apps ~ .  - college ,   data=College.train)
+summary(apps.lm0)
+plot(apps.lm0, labels.id = College.train$college)
 ```
-
 
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
 
@@ -103,20 +101,131 @@ pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
+
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
+
+
+ "Private" 
+ "Top10perc" 
+ "Top25perc"
+ "F.Undergrad"
+ "P.Undergrad"
+ "Outstate"
+ "Room.Board"
+ "Books"
+ "Personal"
+ "PhD"
+ "Terminal"
+ "S.F.Ratio"
+ "perc.alumni"
+ "Expend"
+ "Grad.Rate"
+ "Elite" 
+ 
+ Possible interactions:
+ Private & Elite
+
 ```{r}
+apps.lm1<-lm(Apps ~ Private + log(Top10perc) + log(Top25perc) + log(F.Undergrad) +
+           log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal) + log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +   log(Expend) + Grad.Rate+Elite, data=College.train)
+
+summary(apps.lm1)
+
+
+boxcox(apps.lm1)
+
+apps.lm1<-lm(log(Apps) ~ (Private + log(Top10perc) + log(Top25perc) + log(F.Undergrad) +
+           log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal) + log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +   log(Expend) + Grad.Rate+ Elite)^2, data=College.train)
+
+apps.best<-step(apps.lm1, k=log(nrow(College.train)))
+
+summary(apps.lm1)
+plot(apps.lm1,labels.id = College.train$college)
+
+summary(apps.best)
+plot(apps.best)
 
 ```
 
+```{r}
+summary()
+```
+
+
+
+```{r}
+attach(College.train)
+plot(College.train$Oust, College.train$P.Undergrad)
+coplot(Apps ~ Private | Elite)
+```
+
+
+
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
+
+```{r}
+nsim=1000
+rmse = function(y, ypred){
+  rmse=sqrt(mean((y-ypred)^2))
+  return(rmse)
+}
+
+X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + log(Top25perc) + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(PhD) + log(Expend) + Grad.Rate + Private:Room.Board + 
+    log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+    Outstate:log(Expend) + Room.Board:log(Expend) + log(PhD):Grad.Rate , data=College.train)
+params<-sim(apps.best, nsim)
+Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
+RMSE.2<-rep(0,nsim)
+for(j in 1:nsim){
+Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+RMSE.2[j]<-rmse(Y[,j],predict(apps.best))
+  
+}
+RMSE.2<-as.data.frame(RMSE.2)
+
+
+RMSE.1<-rmse(College.train$Apps,predict(apps.best))
+ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1)
+ 
+
+pval<-sum(RMSE.2>RMSE.1)/nsim
+print(pval)
+
+```
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
 where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
+
+```{r}
+a<-predict(apps.lm1, newdata=College.test[,-17])
+a.new<-a[-c(132,170)]
+plot(exp(a.new), exp(a.new)-College.test$Apps[-c(132,170)])
+plot(a.new, a.new-log(College.test$Apps[-c(132,170)]))
+
+RMSE.lm1<-sqrt()
+
+```
+
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
+
+```{r}
+apps.poiss1<-glm(Apps ~ .-college, data=College.train, family = "poisson")
+apps.poiss.lm<-lm(Apps ~ .-college, data=College.train)
+
+summary(apps.poiss1)
+summary(apps.poiss.lm)
+
+plot(apps.poiss)
+```
+
+
+
 
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  
 
@@ -132,30 +241,54 @@ return(rmse)
 
 #rmse(College.test$y, poi.yhat.test)
 ```
-*Used function from Model Comparison slides in class for RMSE
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
 ```{r}
-#summary(model)
-```
+apps.poiss1<-glm(Apps ~. -college, data=College.train,family = "poisson")
+summary(apps.poiss1)
+apps.poiss2<-glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + log(F.Undergrad) +
+           log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal) + log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +   log(Expend) + Grad.Rate+ Elite, data=College.train, family = "poisson")
+summary(apps.poiss2)
 
+apps.poiss3<-glm(Apps ~ (Private + log(Top10perc) + log(Top25perc) + log(F.Undergrad) +
+           log(P.Undergrad) +  Outstate + Room.Board + log(Books) + log(Personal) + log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +   log(Expend) + Grad.Rate+ Elite)^2, data=College.train, family = "poisson")
+
+
+best.step = step(apps.poiss3, k=log(nrow(College.train)))  # AIC
+#apps.poiss4<-glm(Apps~ (Private +log(F.Undergrad)+Outstate+Room.Board+perc.alumni+log(Expend)+Grad.Rate )^2+log(Top10perc) + log(Top25perc) + log(P.Undergrad )+ Elite,data=College.train, family = "poisson")
+
+#summary(apps.poiss4)
+
+
+#best.step = step(apps.poiss4, k=2)  # AIC
+#summary(best.step)
+```
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
 14. Build a model using the negative binomial model (consider transformations and interactions if needed) and examine diagnostic plots.  Are there any suggestions of problems with this model?
 
-```{r}
-college.nb <- glm.nb(y ~ x)
-```
-
-
-15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?
 
 ```{r}
+apps.nb<-glm.nb(Apps ~Private + log(Top10perc) + log(Top25perc) + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(Books) + log(Personal) + log(PhD) + Terminal + log(S.F.Ratio) + 
+    perc.alumni + log(Expend) + Grad.Rate + Elite, data=College.train)
+summary(apps.nb)
 
+
+apps.nb.int<-glm.nb(Apps ~(Private + log(Top10perc) + log(Top25perc) + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(Books) + log(Personal) + log(PhD) + Terminal + log(S.F.Ratio) + 
+    perc.alumni + log(Expend) + Grad.Rate + Elite)^2, data=College.train)
+summary(apps.nb.int)
+
+best.nb<-step(apps.nb.int, k=log(nrow(College.train)))
+summary(best.nb)
 ```
 
+15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?  
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
@@ -169,15 +302,6 @@ the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) 
 ### Some Theory   
 
 19.   We have said that the residual deviance has a $\chi^2$ distribution with $n - p - 1$  degrees of freedom (n - the number of parameters) if the model is correct.   What is the mean and standard deviation of the residual deviance?    Use the Empirical Rule to suggest an easy to use cut-off for suggesting overdispersion that you can calculate without a calculator.
-
-ANSWER: The residual deviance has mean  $n-p-1$ and standard deviation $\sqrt{2(n-p-1)}$ (basic results from distribution theory). By definition of a $\Chi^2$, the residual deviance is equal in distribution to $\sum_{i=1}^{n-p-1} Z_i^2$ where $Z_i$ are i.i.d. standard normals. By virtue of the CLT, we have for large residual degrees of freedom $df=n-p-1$,
-$$ \sqrt{n-p-1} \left( \frac{\sum_{i=1}^{n-p-1} Z_i^2}{n-p-1}-1\right) \approx \mathcal{N}(0, 2).$$
-Therefore, we have that the residual deviance $D$ divided by $df$ satisfies
-$$\frac{D}{df}-1 \approx \mathcal{N}(0, \frac{2}{df})$$
-Using the Empirical Rule (95% confidence interval approximated by $\pm 2\sigma$ for normal), we derive a heuristic cutoff of 
-$$ \frac{D}{f}> 1+ 2 \sqrt{\frac{2}{df}}=1+ \sqrt{\frac{8}{df}}.$$
-
-
 
 20.  Gamma mixtures of Poissons:  From class we said that
 \begin{align}
