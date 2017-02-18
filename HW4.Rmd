@@ -168,7 +168,7 @@ ANSWER: The RMSE of the observed data is not inconsistent with the simulated mod
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 
 
-ANSWER: First we do log transformation on 'Apps'. From the residual plot, we can see that the residual plot is much better than for the non-trannon-transform one. We applied boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. For better intepratation of y, we admit log transformation on y.
+ANSWER: First we perform a  log transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
 
 ```{r}
 #log transformation on y
@@ -180,7 +180,7 @@ plot(app_lm_yt)
 boxcox(app_lm)
 ```
 
-However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we appied quadratic transformation on x since there is quadartic trend.
+However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
 
 ```{r}
 
