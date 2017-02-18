@@ -232,8 +232,7 @@ plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
 ```{r}
-attach(College.train)
-Apps.poi = glm(Apps ~ . -Apps -college, family = poisson(link = "log"), data = College.train)
+Apps.poi = glm(Apps ~ . -Private -Apps -college -Elite, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
 plot(Apps.poi)
 ```
@@ -242,7 +241,21 @@ While the residual plot shows a fairly uniform distribution and all variables ar
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
 
 ```{r}
+S = 1000
+beta = sim(Apps.poi, n.sims = 1000)
+X = model.matrix(Apps ~ . -Private -Apps -college -Elite, data = College.train)
+Y = matrix(NA, nrow(College.train), ncol = S)
 
+rmse.train.poi = rmse(predict(Apps.poi), College.train)
+rmse.rep.poi = matrix(NA, 1, ncol=1000)
+
+for (s in 1:S) {
+  Y[, s] = exp(X %*% beta@coef[s,]) + rnorm(1, 0, 1)
+  rmse.rep.poi[s] = rmse(predict(Apps.poi, data = College.train), Y[, i] )
+}
+
+rmse.df = data.frame(train.poi = rmse.train.poi, rep.poi = rmse.rep.poi)
+rmse.df
 ```
 
 
