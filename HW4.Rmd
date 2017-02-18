@@ -81,14 +81,30 @@ return(rmse)
 
 #rmse(College.test$y, poi.yhat.test)
 ```
+*Used function from Model Comparison slides in class for RMSE
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
+
+```{r}
+#summary(model)
+```
+
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
 14. Build a model using the negative binomial model (consider transformations and interactions if needed) and examine diagnostic plots.  Are there any suggestions of problems with this model?
 
-15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?  
+```{r}
+college.nb <- glm.nb(y ~ x)
+```
+
+
+15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?
+
+```{r}
+
+```
+
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
