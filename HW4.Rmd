@@ -154,10 +154,10 @@ RMSE.2 = data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
 #plot the histogram
-GGPLOT.0<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
+GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
   geom_histogram(color = "firebrick") + 
   geom_vline(xintercept = RMSE.1, color="red")
-plot(GGPLOT.0)
+plot(GGPLOT.4)
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -256,8 +256,8 @@ RMSE.2<-as.data.frame(RMSE.2)
 
 
 RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
-GGPLOT.best<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
-print(GGPLOT.best)
+GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
+print(GGPLOT.6)
 
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -267,20 +267,6 @@ print(pval)
 ```{r}
 
 
-
-
-
-set.seed(1)
-app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + Top25perc + 
-                                       log(F.Undergrad) + log(P.Undergrad) + Outstate + 
-                                       Room.Board + log(PhD) + log(S.F.Ratio) + 
-                                       log(Expend) + Grad.Rate + Private:Room.Board + 
-                                       log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
-                                       log(P.Undergrad):Outstate + Outstate:log(Expend) + 
-                                       Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-                                       log(Expend):Grad.Rate, 
-                                       data = College.train)
-```
 
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data.
