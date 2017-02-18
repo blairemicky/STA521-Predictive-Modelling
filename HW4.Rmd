@@ -154,6 +154,15 @@ the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) 
 
 19.   We have said that the residual deviance has a $\chi^2$ distribution with $n - p - 1$  degrees of freedom (n - the number of parameters) if the model is correct.   What is the mean and standard deviation of the residual deviance?    Use the Empirical Rule to suggest an easy to use cut-off for suggesting overdispersion that you can calculate without a calculator.
 
+ANSWER: The residual deviance has mean  $n-p-1$ and standard deviation $\sqrt{2(n-p-1)}$ (basic results from distribution theory). By definition of a $\Chi^2$, the residual deviance is equal in distribution to $\sum_{i=1}^{n-p-1} Z_i^2$ where $Z_i$ are i.i.d. standard normals. By virtue of the CLT, we have for large residual degrees of freedom $df=n-p-1$,
+$$ \sqrt{n-p-1} \left( \frac{\sum_{i=1}^{n-p-1} Z_i^2}{n-p-1}-1\right) \approx \mathcal{N}(0, 2).$$
+Therefore, we have that the residual deviance $D$ divided by $df$ satisfies
+$$\frac{D}{df}-1 \approx \mathcal{N}(0, \frac{2}{df})$$
+Using the Empirical Rule (95% confidence interval approximated by $\pm 2\sigma$ for normal), we derive a heuristic cutoff of 
+$$ \frac{D}{f}> 1+ 2 \sqrt{\frac{2}{df}}=1+ \sqrt{\frac{8}{df}}.$$
+
+
+
 20.  Gamma mixtures of Poissons:  From class we said that
 \begin{align}
 Y \mid \lambda & \sim P(\lambda) \\
