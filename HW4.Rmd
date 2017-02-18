@@ -172,7 +172,7 @@ Comment on  how well the assumptions are met and and issues that diagnostic plot
 
 ANSWER: First we perform alog transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
 
-```{r}
+```{r, echo=FALSE}
 #log transformation on y
 app_lm_yt = lm(log(Apps)~.-college, data = College.train)
 par(mfrow = c(2,2))
@@ -200,7 +200,7 @@ plot(app_lm_t)
 
 
 Finally, we applied step function(BIC) to see if there are potential interation terms. From the plots, we can see, both residual plots and QQplot are much better than before. There, we finally choose the model given below are the best linear model for this data. 
-```{r}
+```{r, echo=F}
 # Systematic check for interactions
 app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +       
                            log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
@@ -284,19 +284,19 @@ X<-model.matrix(log(Apps) ~ Private + Top25perc + log(F.Undergrad) +
     Top25perc:log(Books) + log(P.Undergrad):Outstate + Outstate:log(Expend) + 
     Room.Board:log(Expend) + log(Books):log(Personal) + log(Books):Grad.Rate + 
     log(PhD):Grad.Rate, data=College.train)
-params<-sim(apps.best, nsim)
+params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
 # note that we had log-transformed the response; hence we need to exponentiate the simulated responses
 for(j in 1:nsim){
 Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
-RMSE.2[j]<-rmse(Y[,j],exp(predict(apps.best)))
+RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
   
 }
 RMSE.2<-as.data.frame(RMSE.2)
 
 
-RMSE.1<-rmse(College.train$Apps,exp(predict(apps.best)))
+RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
 GGPLOT.best<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
 print(GGPLOT.best)
 
