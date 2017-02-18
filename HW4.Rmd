@@ -14,6 +14,7 @@ suppressMessages(library(arm))
 suppressMessages(library(ggplot2))
 suppressMessages(library(dplyr))
 suppressMessages(library(GGally))
+suppressMessages(library(tidyr))
 library(knitr)
 # post on piazza for additional packages if there are wercker build errors due to missing packages
 ```
@@ -22,7 +23,7 @@ Load the college application data from Lab1 and create the variable `Elite` by b
 
 ```{r data}
 data(College)
-View(College)
+
 College = College %>% mutate(college = rownames(College)) %>%
                       mutate(Elite = factor(Top10perc > 50)) %>%
                       mutate(Elite = 
@@ -65,9 +66,42 @@ From the summaries given above, variables in both train set and test set have si
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
 ```{r}
-ggplot(data = College.train, aes(y=Apps, x = Outstate))+
-  geom_point()
+#melt data
+College.train_melt = College.train %>% select(-c(Private,college, Elite)) %>% 
+                     gather(feature, value, c(Top10perc:Grad.Rate))
+
+College.train_melt_f = College.train %>% select(-college) %>% 
+                                         select(c(Private,Apps,Elite)) %>% 
+                                         gather(feature, value, c(Private,Elite))
+
+College.train_melt_1 = College.train_melt[1:2328,]
+College.train_melt_2 = College.train_melt[2329:4656,]
+College.train_melt_3 = College.train_melt[4657:6984,]
+College.train_melt_4 = College.train_melt[6985:8148,]
+
+ggplot(College.train_melt_1, aes(value, Apps)) +
+  geom_point(color = "firebrick") +
+  facet_wrap(~feature, scales = "free")
+
+ggplot(College.train_melt_2, aes(value, Apps)) +
+  geom_point(color = "firebrick") +
+  facet_wrap(~feature, scales = "free")
+
+ggplot(College.train_melt_3, aes(value, Apps)) +
+  geom_point(color = "firebrick") +
+  facet_wrap(~feature, scales = "free")
+
+ggplot(College.train_melt_4, aes(value, Apps)) +
+  geom_point(color = "firebrick") +
+  facet_wrap(~feature, scales = "free")
+
+ggplot(College.train_melt_f, aes(value, Apps)) +
+  geom_point(color = "firebrick") +
+  facet_wrap(~feature, scales = "free")
 ```
+
+
+
 
 3.  Build a linear regression model to predict `Apps` from the other predictors (without any transformations).  Present model summaries and diagnostic plots.   Based on diagnostic plots  using residuals,  comment on the  adequacy of your model.
 ```{r}
@@ -84,31 +118,31 @@ plot(lm_c)
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
 
 ```{r}
-nsim=1000
-rmse = function(y, ypred){
-  rmse=sqrt(mean((y-ypred)^2))
-  return(rmse)
-}
-
-X<-model.matrix(Apps ~ .   - college , data=College.train)
-params<-sim(apps.lm0, nsim)
-Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
-RMSE.2<-rep(0,nsim)
-for(j in 1:nsim){
-Y[,j]<-X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j])
-RMSE.2[j]<-rmse(Y[,j],predict(apps.lm0))
-  
-}
-RMSE.2<-as.data.frame(RMSE.2)
-
-
-RMSE.1<-rmse(College.train$Apps,predict(apps.lm0))
-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1)
- 
-
-pval<-sum(RMSE.2>RMSE.1)/nsim
-print(pval)
-
+#nsim=1000
+#rmse = function(y, ypred){
+#  rmse=sqrt(mean((y-ypred)^2))
+#  return(rmse)
+#}
+#
+#X<-model.matrix(Apps ~ .   - college , data=College.train)
+#params<-sim(apps.lm0, nsim)
+#Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
+#RMSE.2<-rep(0,nsim)
+#for(j in 1:nsim){
+#Y[,j]<-X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j])
+#RMSE.2[j]<-rmse(Y[,j],predict(apps.lm0))
+#  
+#}
+#RMSE.2<-as.data.frame(RMSE.2)
+#
+#
+#RMSE.1<-rmse(College.train$Apps,predict(apps.lm0))
+#ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1)
+# 
+#
+#pval<-sum(RMSE.2>RMSE.1)/nsim
+#print(pval)
+#
 ```
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
