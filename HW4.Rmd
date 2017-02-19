@@ -61,7 +61,7 @@ summary(College.test[,-17])
 ```
 Answer: catergorical variables: Private, Elite. College name should not be treated as a variable. All other variables left should be treated as numerical variables. 
 
-From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce biase since private school and public school have many difference.
+From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce bias since private school and public school have many difference.
 
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
