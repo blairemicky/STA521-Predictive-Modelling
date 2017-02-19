@@ -154,10 +154,13 @@ RMSE.2 = data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
 #plot the histogram
+
 GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
-  geom_histogram(color = "firebrick") + 
-  geom_vline(xintercept = RMSE.1, color="red")+labs(x="RMSE", y="Count")
+  geom_histogram() + 
+  geom_vline(xintercept = RMSE.1, color="red")
 plot(GGPLOT.4)
+
+
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -182,16 +185,15 @@ plot(app_lm_yt)
 boxcox(app_lm)
 ```
 
-However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
-
+However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points.
 ```{r}
 
 #log transformation on y
-app_lm_t = lm(log(Apps) ~ Private + log(Top10perc) + (Top25perc)^2 +       
+app_lm_t = lm(log(Apps) ~ Private + log(Top10perc) + log(Top25perc) +       
                            log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
                            (Room.Board) + log(Books) + log(Personal) +         
                            log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
-                           log(Expend) + (Grad.Rate)^2+ Elite, 
+                           log(Expend) + log(Grad.Rate)+ Elite, 
                            data=College.train)
 summary(app_lm_t)
 #diagnostic plots
@@ -202,11 +204,11 @@ plot(app_lm_t)
 Finally, we applied step function(BIC) to see if there are potential interation terms. From the plots, we can see, both residual plots and QQplot are much better than before. There, we finally choose the model given below are the best linear model for this data. 
 ```{r, echo=F}
 # Systematic check for interactions
-app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +       
+app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + log(Top25perc) +       
                            log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
                            (Room.Board) + log(Books) + log(Personal) +         
                            log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
-                           log(Expend) + Grad.Rate+ Elite)^2, 
+                           log(Expend) + log(Grad.Rate)+ Elite)^2, 
                            data=College.train)
 
 #our best linear model using BIC
@@ -228,12 +230,15 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 
 ```{r}
 
+set.seed(1)
+
 nsim=1000
 rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
   return(rmse)
 }
 
+<<<<<<< HEAD
 X<-model.matrix( log(Apps) ~ Private + log(Top10perc) + Top25perc + 
     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
     log(PhD) + log(S.F.Ratio) + log(Expend) + Grad.Rate + Private:Room.Board + 
@@ -241,6 +246,9 @@ X<-model.matrix( log(Apps) ~ Private + log(Top10perc) + Top25perc +
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
     log(Expend):Grad.Rate, data = College.train)
 
+=======
+X<-model.matrix(app_best)
+>>>>>>> 92e39e2c6cb6b09287d52aaced1a8cba2ef0a829
 params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
@@ -263,8 +271,11 @@ print(pval)
 ```
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 92e39e2c6cb6b09287d52aaced1a8cba2ef0a829
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 
@@ -274,7 +285,13 @@ ANSWER: First we plot the predictions for the base model with main effects only,
 # rerun the base model
 apps.lm0<-lm(Apps~., data=College.train[,-17])
 a.new<-predict(apps.lm0, newdata = College.test[,-17])
-b.new<-predict(app_best, newdata=College.test)
+b.new<-predict(app_lm_best, newdata=College.test)
+
+# all of the points
+#par(mfrow=c(1,2))
+#plot(a.new,a.new-College.test$Apps)
+#plot(exp(b.new), exp(b.new)-College.test$Apps)
+
 
 # remove those with residual > 8000
 ind.a<-which(abs(a.new-College.test$Apps)>8000)
@@ -345,30 +362,35 @@ for (s in 1:S) {
 
 rmse.rep.poi = as.data.frame(rmse.rep.poi)
 
-hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.poi, col="red")
+hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram() + geom_vline(xintercept = rmse.train.poi, col="red")
 print(hist.poi)
 
 pval <-sum(rmse.rep.poi > rmse.train.poi)/S
 print(pval)
 ```
-From the histogram, it is clear that the RMSE from the training data is much larger than those generated by simulations of the data set. This suggests that the model is not adequate, as it underestimates the true MSE.
+
 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
 
 ```{r}
-rsme.test = rmse(College.test$Apps, predict(Apps.poi))
-hist.poi = hist.poi + geom_vline(xintercept = rsme.test, colour = "royalblue")
-print(hist.poi)
+rsme.test = rmse(College.test$Apps, poi.yhat.train)
+hist.poi = hist.poi + geom_vline(xintercept = rsme.test, colour = "cornflowerblue")
 ```
-Compared to the training RMSE, the test RMSE shows that the model is far worse than we previously would have imagined, as most of the simulations do not even show up in the grid. This may suggest overfitting or that our model is too flexible.
+*Used function from Model Comparison slides in class for RMSE
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
 ```{r}
 #Poisson using an offset
+<<<<<<< HEAD
+Apps.poi.trans <- glm(Apps ~ . -Apps - P.Undergrad - college, family = poisson(link = "log"), data = College.test)
+summary(Apps.poi.trans)
+plot(Apps.poi.trans)
+=======
 Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
 summary(Apps.qpoi)
 plot(Apps.qpoi)
+>>>>>>> c70ff7cd1e6e31ea4fc05cd1929d05e4340d85f9
 ```
 Using the overdispersed Poisson helped dramatically, as it brought the standard deviance residual down to within -3 and about 4. There is still somewhat of a trend in the Scale-Location plot, and not all of the variables are significant, so the model could probably be improved even more through running a variable selection.
 
