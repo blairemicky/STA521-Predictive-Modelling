@@ -479,6 +479,7 @@ Apps.nb <- glm.nb(Apps ~ Private + log(Top10perc) + log(Top25perc) +
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), data = College.train, link = log)
 summary(Apps.nb)
+par(mfrow = c(2, 2))
 plot(Apps.nb)
 
 Apps.nb$deviance/Apps.nb$df.residual
@@ -499,14 +500,15 @@ beta.nb@sigma = rnorm(S, Apps.nb$theta, Apps.nb$SE.theta)
 rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
 rmse.rep.nb = rep(0, S)
 rmse.test.nb
+
 for (s in 1:S) {
 mu = exp(X.nb %*% beta.nb@coef[s, ])
-Y.nb[s,] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
+Y.nb[,s] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
 rmse.rep.nb[s] = rmse(predict(Apps.nb), Y.nb[,s])
 }
 
 rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
-rmse.q.df
+rmse.nb.df
 rmse.rep.nb = as.data.frame(rmse.rep.nb)
 
 hist.nb <-ggplot(data= rmse.rep.nb, aes(x=rmse.rep.nb)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.test.nb, col="red")
