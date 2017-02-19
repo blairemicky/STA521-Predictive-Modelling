@@ -145,7 +145,7 @@ RMSE.2<-rep(0,nsim)
 for(i in 1:nsim){
 y_rep[i,] = X %*% params@coef[i,] + rnorm(1, 0, params@sigma[i])
 RMSE.2[i]<-rmse(predict(app_lm), y_rep[i,])
-  
+
 }
 RMSE.2 = data.frame(RMSE.2)
 
@@ -157,6 +157,9 @@ GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
   geom_histogram() + 
   geom_vline(xintercept = RMSE.1, color="red")+labs(x="RMSE", y="Count")
 plot(GGPLOT.4)
+#prediction interval
+pi.lm = t(apply(y_rep, 2, function(x) {
+    quantile(x, c((1 - .95)/2,  .5 + .95/2))}))
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 RMSE.1
@@ -259,7 +262,11 @@ RMSE.2<-as.data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
 GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
 print(GGPLOT.6)
-RMSE.1
+RMSE.1 # obeserved
+#prediction interval
+pi.best = t(apply(Y, 1, function(x) {
+    quantile(x, c((1 - .95)/2,  .5 + .95/2))}))
+#pvalue
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
@@ -354,6 +361,9 @@ rmse.rep.poi = as.data.frame(rmse.rep.poi)
 hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.poi, col="red")
 print(hist.poi)
 rmse.train.poi
+#prediction interval
+pi.poi = t(apply(Y, 1, function(x) {
+    quantile(x, c((1 - .95)/2,  .5 + .95/2))}))
 pval <-sum(rmse.rep.poi > rmse.train.poi)/S
 print(pval)
 ```
@@ -440,12 +450,15 @@ for (s in 1:S) {
   # generate the response realization
   Y.q[, s] = rnegbin(n, mu=mu, theta=mu/(d-1))
   # calculate the RMSE  
-  rmse.rep.qpoi[s] = rmse(predict(model), Y[, s] )
+  rmse.rep.qpoi[s] = rmse(predict(model), Y.q[, s] )
 }
 
 
 RMSE.rep.qp= data.frame(rmse.rep.qpoi)
 
+#prediction interval
+pi.qpoi = t(apply(Y.q, 1, function(x) {
+    quantile(x, c((1 - .95)/2,  .5 + .95/2))}))
 
 #plot the histogram
 
@@ -524,6 +537,11 @@ ANSWER: From histogram, it is clear that the Negative Binomial helps to explain 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
 Write a function to calculate coverage (the input should be the fitted model object and the test data-frame) and then evaluate coverage for each of the 5 models that you fit  (the two normal, the two Poisson and the negative binomial) including plots of the confidence intervals versus ordered by the prediction, with the left out data added as points.  Comment on the plots, highlighting any unusual colleges where the model predicts poorly.
+
+```{r}
+
+
+```
 
 17.  Provide a table  with 
 the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) the predictive check p-value with one row for each of the 5 models and comment the results.  Which model do you think is best and why? 
