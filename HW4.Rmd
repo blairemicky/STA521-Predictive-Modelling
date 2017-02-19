@@ -26,8 +26,7 @@ data(College)
 
 College = College %>% mutate(college = rownames(College)) %>%
                       mutate(Elite = factor(Top10perc > 50)) %>%
-#                      mutate(Elite = 
- #                              car::recode(Elite, "TRUE" = "Yes", "FALSE" ="No")) #%>%
+                      mutate(Elite = recode(Elite, "TRUE" = "Yes", "FALSE" ="No")) %>%
                       dplyr::select(c(-Accept,-Enroll))
                       
 
@@ -113,7 +112,7 @@ We then paid attention to numerical variables. We could see clearly that the num
 app_lm = lm(Apps ~.-college, data  = College.train)
 
 summary(app_lm)
-par(mforw = c(2,2))
+par(mfrow = c(2,2))
 plot(app_lm, labels.id = College.train$college)
 
 
@@ -155,7 +154,7 @@ RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
 #plot the histogram
 GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
-  geom_histogram(color = "firebrick") + 
+  geom_histogram() + 
   geom_vline(xintercept = RMSE.1, color="red")+labs(x="RMSE", y="Count")
 plot(GGPLOT.4)
 #compute p-value
