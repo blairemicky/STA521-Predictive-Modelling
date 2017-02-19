@@ -378,58 +378,94 @@ ANSWER: Given the overdispersion, a first step is to add a variable dispersion p
 
 ```{r}
 # Quasi-Poisson 
-Apps.qpoi <- glm(Apps ~ . - college, family = quasipoisson(link = "log"), data = College.train)
-summary(Apps.qpoi)
+Apps.qpoi.1 <- glm(Apps ~ . , family = quasipoisson(link = "log"), data = College.train[,-17])
+summary(Apps.qpoi.1)
 par(mfrow=c(2,2))
-plot(Apps.qpoi)
+plot(Apps.qpoi.1)
 ```
 
 
-Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residuals down from a max of an absolute value of 100 to a max of an absolute value of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot.
+Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of an absolute value of 100 to a max of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. 
+
+Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is >250.
 
 Below, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is a lower estimate of overdispersion at 284.2, but the p-value is still zero, indicating that we should reject this model as well. 
 
 ```{r}
 # Quasi-Poisson with transformations and interactions
-Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
+Apps.qpoi.2 <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
     log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
-summary(Apps.qpoi)
-plot(Apps.qpoi)
 
-Apps.qpoi$deviance/Apps.qpoi$df.residual
-pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
+summary(Apps.qpoi.2)
+par(mfrow=c(2,2))
+plot(Apps.qpoi.2)
+
+
+Apps.qpoi.2$deviance/Apps.qpoi.2$df.residual
+pchisq(Apps.qpoi.2$deviance, Apps.qpoi.2$df.residual, lower.tail = F)
 ```
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
 ```{r}
-S = 1000
-beta.q = sim(Apps.qpoi, n.sims = 1000)
-X.q = model.matrix(Apps.qpoi)
-Y.q = matrix(NA, nrow(College.train), ncol = S)
+# Choose the model
+model<-Apps.qpoi.2 # .1 for untransformed predictors, .2 for transformed predictors
 
-rmse.test.qpoi = rmse(predict(Apps.qpoi), College.test$Apps)
+# Simulate 1000 replicates
+S = 1000
+n<-nrow(College.train)
+qp.sim = sim(model, n.sims = 1000)
+# Generate the design matrix 
+X.q = model.matrix(model, data = College.train)
+# Allocate the output 
+Y.q = matrix(NA, nrow(College.train), ncol = S)
 rmse.rep.qpoi = rep(0, S)
 
+# Compute the rmse of the training data
+rmse.qpoi.train = rmse(predict(model, newdata=College.train), College.train$Apps)
+
+# Compute the rmse of the test data
+rmse.qpoi.test = rmse(predict(model, newdata=College.test), College.test$Apps)
+
+# ????? should be the square, correct????
+d<-(qp.sim@sigma[1])^2
+
 for (s in 1:S) {
-  lambda = exp(X %*% beta.q@coef[s,]) 
-  Y.q[, s] = rpois(nrow(College.train),lambda)
-  rmse.rep.poi[s] = rmse(predict(Apps.qpoi), Y.q[, s])
+  # generate the mu's
+  mu<-exp(X.q %*% qp.sim@coef[s,])
+  # generate the response realization
+  Y.q[, s] = rnegbin(n, mu=mu, theta=mu/(d-1))
+  # calculate the RMSE  
+  rmse.rep.qpoi[s] = rmse(predict(model), Y[, s] )
 }
 
-rmse.q.df = data.frame(rsme.test.qpoi = rmse.test.qpoi, rmse.rep.qpoi = rmse.rep.qpoi)
-rmse.q.df
-rmse.rep.qpoi = as.data.frame(rmse.rep.qpoi)
 
-hist.qpoi <-ggplot(data= rmse.rep.qpoi, aes(x=rmse.rep.qpoi)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.test.qpoi, col="red")
-print(hist.qpoi)
+RMSE.rep.qp= data.frame(rmse.rep.qpoi)
 
-pval <-sum(rmse.rep.qpoi > rmse.test.qpoi)/S
+
+#plot the histogram
+
+GGPLOT.13<-ggplot(data= RMSE.rep.qp, aes(x=RMSE.rep.qp))+
+  geom_histogram() + 
+  geom_vline(xintercept = rmse.qpoi.train, color="red") 
+
+
+GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="slateblue")
+
+par(mfrow=c(2,2))
+plot(GGPLOT.13)
+plot(GGPLOT.13.2)
+
+
+#compute p-value
+pval<-sum(RMSE.rep.qp>RMSE.rep.qp)/nsim
 print(pval)
+
+
 ```
 
 
@@ -455,16 +491,19 @@ ANSWER: After adding in the transformations that we used in our linear model, th
 
 ```{r}
 S = 1000
-beta.nb = sim.negbin(Apps.nb, n.sims = 1000)
-X.nb = model.matrix(Apps ~ . -Apps -college, data = College.test)
-Y.nb = matrix(NA, nrow(College.test), ncol = S)
+class(Apps.nb) = "glm"
+beta.nb = sim(Apps.nb, n.sims = 1000)
+X.nb = model.matrix(Apps.nb)
+Y.nb = matrix(NA, nrow(College.train), ncol = S)
+beta.nb@sigma = rnorm(S, Apps.nb$theta, Apps.nb$SE.theta)
 
 rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
 rmse.rep.nb = rep(0, S)
-
+rmse.test.nb
 for (s in 1:S) {
-  Y.nb[, s] = exp(X.nb %*% beta.nb@coef[s,]) + rnorm(1, 0, beta.nb@sigma[s])
-  rmse.rep.nbp[s] = rmse(predict(Apps.nb), Y[, s] )
+mu = exp(X.nb %*% beta.nb@coef[s, ])
+Y.nb[s,] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
+rmse.rep.nb[s] = rmse(predict(Apps.nb), Y.nb[,s])
 }
 
 rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
