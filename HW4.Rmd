@@ -212,7 +212,7 @@ app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + log(Top25perc) +
                            data=College.train)
 
 #our best linear model using BIC
-app_best = step(app_lm_t2, k=log(nrow(College.train)))
+#app_best = step(app_lm_t2, k=log(nrow(College.train)))
 
 summary(app_best)
 #diagnostic plots
@@ -230,25 +230,21 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 
 ```{r}
 
-set.seed(1)
 
+seed(1)
 nsim=1000
 rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
   return(rmse)
 }
 
-<<<<<<< HEAD
-X<-model.matrix( log(Apps) ~ Private + log(Top10perc) + Top25perc + 
+X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + log(Top25perc) + 
     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
-    log(PhD) + log(S.F.Ratio) + log(Expend) + Grad.Rate + Private:Room.Board + 
-    log(Top10perc):Top25perc + log(Top10perc):log(Expend) + log(P.Undergrad):Outstate + 
-    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-    log(Expend):Grad.Rate, data = College.train)
+    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
+    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
+    log(Expend):log(Grad.Rate), data = College.train)
 
-=======
-X<-model.matrix(app_best)
->>>>>>> 92e39e2c6cb6b09287d52aaced1a8cba2ef0a829
 params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
@@ -265,17 +261,14 @@ RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
 GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
 print(GGPLOT.6)
 
-pval<-sum(RMSE.2>RMSE.1)/nsim
-print(pval)
+pval.best<-sum(RMSE.2>RMSE.1)/nsim
+print(pval.best)
 
 ```
 
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 92e39e2c6cb6b09287d52aaced1a8cba2ef0a829
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 
@@ -285,7 +278,7 @@ ANSWER: First we plot the predictions for the base model with main effects only,
 # rerun the base model
 apps.lm0<-lm(Apps~., data=College.train[,-17])
 a.new<-predict(apps.lm0, newdata = College.test[,-17])
-b.new<-predict(app_lm_best, newdata=College.test)
+b.new<-predict(app_best, newdata=College.test)
 
 # all of the points
 #par(mfrow=c(1,2))
@@ -316,13 +309,15 @@ print(RMSE.0.test)
 print(RMSE.best.test)
 ```
 
-With an RMSE of 'r RMSE.best' the out of sample prediction is better for the model with interactions and transformations compared to the base model which has an RMSE of 'r RMSE.0'.
+With an RMSE of 'r RMSE.best.test' the out of sample prediction is better for the model with interactions and transformations compared to the base model which has an RMSE of 'r RMSE.0.test'.
 
 
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
 
-ANSWER: If the model was true, then yes, these values would be surprising. 
+ANSWER: The RMSEs of the test data are substantially larger than the RSMEs of the training data. We expect them to be larger but given that they are in the far tail of the simulated histogram, this indicates we are doing pretty poorly for prediction. The p-values are 'r RMSE.0.test' and 'r RMSE.best.test' for the base model and the best model, respectively.
+
+
 ```{r}
 par(mfrow=c(1,2))
 plot(GGPLOT.4+geom_vline(xintercept = RMSE.0.test, col="yellow"))
