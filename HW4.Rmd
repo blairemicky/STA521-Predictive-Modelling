@@ -463,11 +463,11 @@ pi.qpoi = t(apply(Y.q, 1, function(x) {
 #plot the histogram
 
 GGPLOT.13<-ggplot(data= RMSE.rep.qp, aes(x=RMSE.rep.qp))+
-  geom_histogram() + 
+  geom_histogram(fill = "slateblue") + 
   geom_vline(xintercept = rmse.qpoi.train, color="red") 
 
 
-GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="slateblue")
+GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="cornflowerblue")
 
 par(mfrow=c(2,2))
 plot(GGPLOT.13)
