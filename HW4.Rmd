@@ -464,20 +464,21 @@ GGPLOT.13<-ggplot(data= RMSE.rep.qp, aes(x=RMSE.rep.qp))+
   geom_vline(xintercept = rmse.qpoi.train, color="red") 
 
 
-GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="cornflowerblue")
+GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="cornflowerblue") + xlab("RMSE")+ ylab("Count")
 
-par(mfrow=c(2,2))
-plot(GGPLOT.13)
 plot(GGPLOT.13.2)
 
 
 #compute p-value
-pval<-sum(RMSE.rep.qp>rmse.qpoi.train)/nsim
-print(pval)
+pval.train<-sum(RMSE.rep.qp>rmse.qpoi.train)/nsim
+print(pval.train)
+pval.test<-sum(RMSE.rep.qp>rmse.qpoi.test)/nsim
+print(pval.test)
 
 
 ```
 
+ANSWER: Accounting for dispersion leads to a good fit to the training data based on the RMSE statistic. The corresponding p-value is 'r pval.train' and indicates that there is no evidence to reject the model. For the test data however, we are doing very poorly as can be seen visually and the p-value of 0.
 
 
 14. Build a model using the negative binomial model (consider transformations and interactions if needed) and examine diagnostic plots.  Are there any suggestions of problems with this model?
