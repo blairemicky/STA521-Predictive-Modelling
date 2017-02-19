@@ -438,7 +438,7 @@ Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) +
 summary(Apps.qpoi)
 plot(Apps.qpoi)
 
-Apps.qpoi$deviance/Apps.qpoi$df.residual
+disperse.qpoi = Apps.qpoi$deviance/Apps.qpoi$df.residual
 pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
 ```
 
@@ -454,9 +454,9 @@ rmse.test.qpoi = rmse(predict(Apps.qpoi), College.test$Apps)
 rmse.rep.qpoi = rep(0, S)
 
 for (s in 1:S) {
-  lambda = exp(X %*% beta.q@coef[s,]) 
-  Y.q[, s] = rpois(nrow(College.train),lambda)
-  rmse.rep.poi[s] = rmse(predict(Apps.qpoi), Y.q[, s])
+  lambda = exp(X.q %*% beta.q@coef[s,]) 
+  Y.q[, s] = rnegbin(nrow(College.train), mu = lambda, theta = lambda/(sqrt(disperse.qpoi) - 1))
+  rmse.rep.qpoi[s] = rmse(predict(Apps.qpoi), Y.q[, s])
 }
 
 rmse.q.df = data.frame(rsme.test.qpoi = rmse.test.qpoi, rmse.rep.qpoi = rmse.rep.qpoi)
@@ -493,16 +493,18 @@ ANSWER: After adding in the transformations that we used in our linear model, th
 
 ```{r}
 S = 1000
-beta.nb = sim.negbin(Apps.nb, n.sims = 1000)
-X.nb = model.matrix(Apps ~ . -Apps -college, data = College.test)
-Y.nb = matrix(NA, nrow(College.test), ncol = S)
+class(Apps.nb) = "glm"
+beta.nb = sim(Apps.nb, n.sims = 1000)
+X.nb = model.matrix(Apps.nb)
+Y.nb = matrix(NA, nrow(College.train), ncol = S)
 
 rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
 rmse.rep.nb = rep(0, S)
-
+rmse.test.nb
 for (s in 1:S) {
-  Y.nb[, s] = exp(X.nb %*% beta.nb@coef[s,]) + rnorm(1, 0, beta.nb@sigma[s])
-  rmse.rep.nbp[s] = rmse(predict(Apps.nb), Y[, s] )
+mu = exp(X.nb %*% beta.nb@coef[s, ])
+Y.nb[s,] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
+rmse.rep.nb[s] = rmse(predict(Apps.nb), Y.nb[,s])
 }
 
 rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
