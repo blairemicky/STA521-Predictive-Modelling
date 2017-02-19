@@ -439,7 +439,7 @@ for (s in 1:S) {
   # generate the response realization
   Y.q[, s] = rnegbin(n, mu=mu, theta=mu/(d-1))
   # calculate the RMSE  
-  rmse.rep.qpoi[s] = rmse(predict(model), Y[, s] )
+  rmse.rep.qpoi[s] = rmse(predict(model), Y.q[, s] )
 }
 
 
@@ -449,11 +449,11 @@ RMSE.rep.qp= data.frame(rmse.rep.qpoi)
 #plot the histogram
 
 GGPLOT.13<-ggplot(data= RMSE.rep.qp, aes(x=RMSE.rep.qp))+
-  geom_histogram() + 
+  geom_histogram(fill = "slateblue") + 
   geom_vline(xintercept = rmse.qpoi.train, color="red") 
 
 
-GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="slateblue")
+GGPLOT.13.2<-GGPLOT.13+geom_vline(xintercept = rmse.qpoi.test, col="cornflowerblue")
 
 par(mfrow=c(2,2))
 plot(GGPLOT.13)
