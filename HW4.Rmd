@@ -330,14 +330,17 @@ plot(GGPLOT.6+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 ```{r}
 Apps.poi = glm(Apps ~ .  -college, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
+par(mfrow=c(2,2))
 plot(Apps.poi)
 
 Apps.poi$deviance/Apps.poi$df.residual
 pchisq(Apps.poi$deviance, Apps.poi$df.residual, lower.tail = F)
 ```
-While the residual plot shows a fairly uniform distribution and all variables are labeled as being signficant, some of the standard deviance residuals are huge- indicating some cause for concern. Furthermore, the estimate of overdispersion is 683.7, indicating that this model is very overdispersed. This is borne out in the chi-square test, where we get 0, suggesting that the model is not an adequate fit.
+ANSWER: Due to the inflexible variance structure (variance=mean) of the Poisson, we find that all predictors are highly significant. The residual deviance is very large, and the ratio of residual deviance divided by the residual degrees of freedom is 683 which is $\qq 1$, indicating substantial overdispersion (no need for a formal test here!). In the diagnostic plots, we observe that  some of the standard deviance residuals are huge - indicating cause for concern. In summary, the overdispersion indicates a lack of fit.
 
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
+
+ANSWER: The RMSE of the model is completely out of whack compared to the replicated data (p value is estiamted to be 0 based on 1000 simulations). In conculsion, based on the RMSE as a test statistic, we have strong evidence to reject the Poisson model.
 
 ```{r}
 S = 1000
@@ -367,27 +370,46 @@ print(pval)
 
 11.  Using the test data set, calculate the RMSE for the test data using the predictions from the Poisson model.  How does this compare to the RMSE based on the observed data?  Add this RMSE to your plot above.
 
+ANSWER: Below, we show the simulated RMSE, together with the training RMSE (red) and the test RMSE (blue) -- we see that the latter is much larger than the training RMSE (not surprising).
+
 ```{r}
-rsme.test = rmse(College.test$Apps, poi.yhat.train)
-hist.poi = hist.poi + geom_vline(xintercept = rsme.test, colour = "cornflowerblue")
+Apps.poi = glm(Apps ~ . , family = poisson(link = "log"), data = College.train[,-17])
+predict(Apps.poi, newdata=College.test[,-17])
+
+rmse.test = rmse(College.test$Apps, predict(Apps.poi, newdata=College.test[,-17]))
+hist.poi <- hist.poi + geom_vline(xintercept = rmse.test, colour = "cornflowerblue")
+plot(hist.poi)
 ```
-*Used function from Model Comparison slides in class for RMSE
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
+ANSWER: Given the overdispersion, a first step is to add a variable dispersion parameter, i.e., use a quasi-Poisson model. Of course, this will not change the deviance as the likelihood remains the same, but it will increase the standard errors and give a better idea of which predictors are important.
+
 ```{r}
-#Poisson using an offset
-<<<<<<< HEAD
-Apps.poi.trans <- glm(Apps ~ . -Apps - P.Undergrad - college, family = poisson(link = "log"), data = College.test)
-summary(Apps.poi.trans)
-plot(Apps.poi.trans)
-=======
-Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
+# Quasi-Poisson 
+Apps.qpoi <- glm(Apps ~ . - college, family = quasipoisson(link = "log"), data = College.train)
 summary(Apps.qpoi)
+par(mfrow=c(2,2))
 plot(Apps.qpoi)
->>>>>>> c70ff7cd1e6e31ea4fc05cd1929d05e4340d85f9
 ```
-Using the overdispersed Poisson helped dramatically, as it brought the standard deviance residual down to within -3 and about 4. There is still somewhat of a trend in the Scale-Location plot, and not all of the variables are significant, so the model could probably be improved even more through running a variable selection.
+
+
+Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of ~10 to below 2, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is 
+
+
+```{r}
+# Quasi-Poisson with transformations and interactions
+Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
+    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
+    log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
+summary(Apps.qpoi)
+par(mfrow=c(2,2))
+plot(Apps.qpoi)
+```
+
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
