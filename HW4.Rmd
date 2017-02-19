@@ -395,11 +395,10 @@ plot(Apps.qpoi)
 ```
 
 
-Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of ~10 to below 2, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is 
+Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of ~10 to below 2, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is >250.
 
 
 ```{r}
-<<<<<<< HEAD
 # Quasi-Poisson with transformations and interactions
 Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
@@ -407,31 +406,16 @@ Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) +
     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
-=======
-<<<<<<< HEAD
-Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
-summary(Apps.qpoi)
-plot(Apps.qpoi)
 
-Apps.qpoi$deviance/Apps.qpoi$df.residual
-pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
-=======
-#Poisson using an offset
-<<<<<<< HEAD
-Apps.poi.trans <- glm(Apps ~ . -Apps - P.Undergrad - college, family = poisson(link = "log"), data = College.test)
-summary(Apps.poi.trans)
-plot(Apps.poi.trans)
-=======
-Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
->>>>>>> 84b34012e8b66bc21088c3f4074f22aa7fd4d44c
+
 summary(Apps.qpoi)
 par(mfrow=c(2,2))
 plot(Apps.qpoi)
-<<<<<<< HEAD
-=======
->>>>>>> c70ff7cd1e6e31ea4fc05cd1929d05e4340d85f9
->>>>>>> 1bf65684003aba62c15368c8e51735dee44c9033
->>>>>>> 84b34012e8b66bc21088c3f4074f22aa7fd4d44c
+
+
+Apps.qpoi$deviance/Apps.qpoi$df.residual
+pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
+
 ```
 
 
