@@ -361,6 +361,7 @@ Apps.poi = glm(Apps ~ .  -college, family = poisson(link = "log"), data = Colleg
 summary(Apps.poi)
 plot(Apps.poi)
 
+#checking for overdispersion
 Apps.poi$deviance/Apps.poi$df.residual
 pchisq(Apps.poi$deviance, Apps.poi$df.residual, lower.tail = F)
 ```
@@ -406,10 +407,12 @@ Compared to the training RMSE, the test RMSE shows that the model is far worse t
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
 ```{r}
-#Poisson using an offset
 Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
 summary(Apps.qpoi)
 plot(Apps.qpoi)
+
+Apps.qpoi$deviance/Apps.qpoi$df.residual
+pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
 ```
 Using the overdispersed Poisson helped dramatically, as it brought the standard deviance residual down to within -3 and about 4. There is still somewhat of a trend in the Scale-Location plot, and not all of the variables are significant, so the model could probably be improved even more through running a variable selection.
 
@@ -448,6 +451,9 @@ print(pval)
 Apps.nb <- glm.nb(Apps ~ . -Apps -college, data = College, link = log)
 summary(Apps.nb)
 plot(Apps.nb)
+
+Apps.nb$deviance/Apps.nb$df.residual
+pchisq(Apps.nb$deviance, Apps.nb$df.residual, lower.tail = F)
 ```
 With the inital model, there is somewhat of a trend in the residual plot, indicating a less than adequate model fit. 
 
