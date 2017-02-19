@@ -324,7 +324,7 @@ print(pval.2)
 
 ```
 
-ANSWER: The p-values of the test data are 'r pval.1' and 'r pval.2', respectively. This means if the model were true, the observed test RMSE's are quite unlikely. This implies that we cannot accurately predict the left out data with this model
+ANSWER: The p-values of the test data are 'r pval.1' and 'r pval.2', respectively. This means if the model were true, the observed test RMSE's are quite unlikely. This implies that we cannot accurately predict the left out data with this model.
 
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
@@ -342,7 +342,7 @@ ANSWER: Due to the inflexible variance structure (variance=mean) of the Poisson,
 
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
 
-ANSWER: The RMSE of the model is completely out of whack compared to the replicated data (p value is estiamted to be 0 based on 1000 simulations). In conculsion, based on the RMSE as a test statistic, we have strong evidence to reject the Poisson model.
+ANSWER: The RMSE of the model is completely out of whack compared to the replicated data (p value is estiamted to be 0 based on 1000 simulations). In conculsion, based on the RMSE as a test statistic, we have very strong evidence to reject the Poisson model.
 
 ```{r}
 S = 1000
@@ -398,9 +398,8 @@ plot(Apps.qpoi.1)
 
 Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of an absolute value of 100 to a max of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. 
 
-Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is >250.
+Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is ~284.
 
-Below, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is a lower estimate of overdispersion at 284.2, but the p-value is still zero, indicating that we should reject this model as well. 
 
 ```{r}
 # Quasi-Poisson with transformations and interactions
@@ -442,7 +441,7 @@ rmse.qpoi.train = rmse(predict(model, newdata=College.train), College.train$Apps
 # Compute the rmse of the test data
 rmse.qpoi.test = rmse(predict(model, newdata=College.test), College.test$Apps)
 
-# ????? should be the square, correct????
+# The dispersion prameter
 d<-(qp.sim@sigma[1])^2
 
 for (s in 1:S) {
