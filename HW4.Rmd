@@ -58,12 +58,13 @@ summary(College.train[,-17])
 summary(College.test[,-17])
 
 ```
-Answer: catergorical variables: Private, Elite. College name should not be treated as a variable. All other variables left should be treated as numerical variables. 
+ANSWER: Catergorical variables: Private and Elite. College name should not be treated as a variable. All other variables left should be treated as numerical variables. 
 
 From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce bias since private school and public school have many difference.
 
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
+
 ```{r}
 #melt data
 College.train_melt = College.train %>% select(-c(Private,college, Elite)) %>% 
@@ -123,7 +124,6 @@ ANSWER: From the residual plot vs fitted value, we see that the residual varianc
 
 
 
-
 ```{r}
 #rmse function
 rmse = function(y, ypred){
@@ -170,7 +170,7 @@ ANSWER: The RMSE of the observed data is not inconsistent with the simulated mod
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 
 
-ANSWER: First we perform alog transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
+ANSWER: First we perform a log transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
 
 ```{r}
 #log transformation on y
@@ -182,7 +182,7 @@ plot(app_lm_yt)
 boxcox(app_lm)
 ```
 
-However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
+However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to predictor transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
 
 ```{r}
 
@@ -285,8 +285,9 @@ ind.b<-which(abs(exp(b.new)-College.test$Apps)>8000)
 
 par(mfrow=c(1,2))
 plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a],xlab="Predicted", ylab="Residual",main ="Base model (#4)")
-plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b],,xlab="Predicted", ylab="Residual",main="Best model (#6)")
+plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b],xlab="Predicted", ylab="Residual",main="Best model (#6)")
 
+# colleges with extremely high number of applications
 print(College$college[ind.a])
 print(College$college[ind.b])
 
@@ -302,19 +303,29 @@ print(RMSE.0.test)
 print(RMSE.best.test)
 ```
 
-With an RMSE of 'r RMSE.best' the out of sample prediction is better for the model with interactions and transformations compared to the base model which has an RMSE of 'r RMSE.0'.
+With an RMSE of 'r RMSE.best.test' the out of sample prediction is better for the model with interactions and transformations compared to the base model which has an RMSE of 'r RMSE.0.test'.
 
 
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
 
-ANSWER: If the model was true, then yes, these values would be surprising. 
+
 ```{r}
 par(mfrow=c(1,2))
 plot(GGPLOT.4+geom_vline(xintercept = RMSE.0.test, col="yellow"))
 plot(GGPLOT.6+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 
+pval<-sum(RMSE.0.test>RMSE.2)/nsim
+print(pval)
+pval<-sum(RMSE.best.test>RMSE.2)/nsim
+print(pval)
+
+
+
 ```
+
+ANSWER: The values. 
+
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
 
