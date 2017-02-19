@@ -462,7 +462,7 @@ plot(GGPLOT.13.2)
 
 
 #compute p-value
-pval<-sum(RMSE.rep.qp>RMSE.rep.qp)/nsim
+pval<-sum(RMSE.rep.qp>rmse.qpoi.train)/nsim
 print(pval)
 
 
