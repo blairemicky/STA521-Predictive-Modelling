@@ -118,12 +118,14 @@ plot(app_lm, labels.id = College.train$college)
 
 
 ```
-ANSWER: From the residual plot vs fitted value, residuals increases as the fitted value increase. From the QQplot, there is clear heavy tail. From scale-location plot, we can a liear trend between standardized residula and fitted value. Therefore, we can conclude linear model without transformation and interaction term is not adequate.
+ANSWER: From the residual plot vs fitted value, we see that the residual variance increases. The model predicts negative Apps, which is not meaningful. From the QQplot, there is clear heavy tail. From scale-location plot, we can see an increasing, linear trend of the standardized residuals vs fitted values. Therefore, we can conclude that a linear model without transformations and/or interactions is not adequate.
 
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
 
+
+
+
 ```{r}
-set.seed(1)
 #rmse function
 rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
@@ -151,26 +153,24 @@ RMSE.2 = data.frame(RMSE.2)
 #compute RMSE based on train data
 RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
-#plot the histogram 
-ggplot(data= RMSE.2, aes(x=RMSE.2))+
+#plot the histogram
+GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
   geom_histogram(color = "firebrick") + 
-  geom_vline(xintercept = RMSE.1)
-
+  geom_vline(xintercept = RMSE.1, color="red")+labs(x="RMSE", y="Count")
+plot(GGPLOT.4)
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
-Answer: based on the p-value for RMSE and histogram, we could not reject this model.
+ANSWER: The RMSE of the observed data is not inconsistent with the simulated model. In fact the tail probability, or p-value, of 'r pval' for RMSE is too large to not reject this model (based on this particular statistic).
 
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 
 
-ANSWER:
-
-First we do log transformation on 'Apps'. From the residual plot, we can see the residual plot is much better than non-transform one. We applied boxcox procedue to find the best y tranformation. And we can see 0 is close to the best parameter. For better intepratation of y, we admit log transformation on y.
+ANSWER: First we perform alog transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
 
 ```{r}
 #log transformation on y
@@ -182,7 +182,7 @@ plot(app_lm_yt)
 boxcox(app_lm)
 ```
 
-However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we appied quadratic transformation on x since there is quadartic trend.
+However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
 
 ```{r}
 
@@ -209,7 +209,7 @@ app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +
                            log(Expend) + Grad.Rate+ Elite)^2, 
                            data=College.train)
 
-#our best linear model
+#our best linear model using BIC
 app_best = step(app_lm_t2, k=log(nrow(College.train)))
 
 summary(app_best)
@@ -225,9 +225,16 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 
 6.  Repeat problem 4, but using your model from problem 5.  If you transform the response, you will need to back transform  data to the original units in order to compute the RMSE in the original units.  Does this suggest that the model is adequate?  Do the two graphs provide information about which model is better?
 
+
 ```{r}
-set.seed(1)
-app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + Top25perc + 
+
+nsim=1000
+rmse = function(y, ypred){
+  rmse=sqrt(mean((y-ypred)^2))
+  return(rmse)
+}
+
+X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
                                        log(F.Undergrad) + log(P.Undergrad) + Outstate + 
                                        Room.Board + log(PhD) + log(S.F.Ratio) + 
                                        log(Expend) + Grad.Rate + Private:Room.Board + 
@@ -236,11 +243,32 @@ app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + Top25perc +
                                        Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
                                        log(Expend):Grad.Rate, 
                                        data = College.train)
+params<-sim(app_best, nsim)
+Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
+RMSE.2<-rep(0,nsim)
+# note that we had log-transformed the response; hence we need to exponentiate the simulated responses
+for(j in 1:nsim){
+Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
+  
+}
+RMSE.2<-as.data.frame(RMSE.2)
+
+
+RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
+GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
+print(GGPLOT.6)
+
+pval<-sum(RMSE.2>RMSE.1)/nsim
+print(pval)
+
 ```
+
 
 
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data.
 
+ANSWER: We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
 
 ```{r}
 
@@ -255,7 +283,7 @@ X<-model.matrix(log(Apps) ~ Private + Top25perc + log(F.Undergrad) +
     log(PhD) + log(Expend) + Grad.Rate + Private:Room.Board + 
     Top25perc:log(Books) + log(P.Undergrad):Outstate + Outstate:log(Expend) + 
     Room.Board:log(Expend) + log(Books):log(Personal) + log(Books):Grad.Rate + 
-    log(PhD):Grad.Rate)
+    log(PhD):Grad.Rate, data=College.train)
 params<-sim(apps.best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
@@ -276,38 +304,33 @@ pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
 ```
-We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
 
-7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data
->>>>>>> 46b0e33e9d9cc0361c6070324f24c22f9d52c1e5
-where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
+
+7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 
 ANSWER: First we plot the predictions for the base model with main effects only, and the 'best' model obtained by BIC. We found that a few predictions have an excessively high residual, so we remove those from the plot.
+
 ```{r}
+# rerun the base model
 apps.lm0<-lm(Apps~., data=College.train[,-17])
 a.new<-predict(apps.lm0, newdata = College.test[,-17])
-b.new<-predict(apps.best, newdata=College.test)
-
-# all of the points
-#par(mfrow=c(1,2))
-#plot(a.new,a.new-College.test$Apps)
-#plot(exp(b.new), exp(b.new)-College.test$Apps)
+b.new<-predict(app_best, newdata=College.test)
 
 # remove those with residual > 8000
 ind.a<-which(abs(a.new-College.test$Apps)>8000)
 ind.b<-which(abs(exp(b.new)-College.test$Apps)>8000)
 
 par(mfrow=c(1,2))
-plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a])
-plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b])
+plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a],xlab="Predicted", ylab="Residual",main ="Base model (#4)")
+plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b],,xlab="Predicted", ylab="Residual",main="Best model (#6)")
 
 print(College$college[ind.a])
 print(College$college[ind.b])
 
 
 ```
-The wors fits (residual >8000) are for  "Antioch University"  and  "College of Saint Catherine" for the base model, and additionally for "Dordt College" in the 'best' linear  model. Next, we compute the RMSE of the test data.
+The wors fits (residual >8000) are for  "Antioch University"  and  "College of Saint Catherine" for the base model, and "College of Saint Catherine" and "Dordt College" for the 'best' linear  model. Next, we compute the RMSE of the test data.
 
 ```{r}
 RMSE.0.test<-sqrt(mean((a.new-College.test$Apps)^2))
@@ -323,11 +346,11 @@ With an RMSE of 'r RMSE.best' the out of sample prediction is better for the mod
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
 
-ANSWER:
+ANSWER: If the model was true, then yes, these values would be surprising. 
 ```{r}
 par(mfrow=c(1,2))
-plot(GGPLOT.0+geom_vline(xintercept = RMSE.0.test, col="yellow"))
-plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
+plot(GGPLOT.4+geom_vline(xintercept = RMSE.0.test, col="yellow"))
+plot(GGPLOT.6+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 
 ```
 
