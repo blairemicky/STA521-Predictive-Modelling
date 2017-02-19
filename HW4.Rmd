@@ -159,6 +159,7 @@ GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
 plot(GGPLOT.4)
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
+RMSE.1
 print(pval)
 
 ```
@@ -258,7 +259,7 @@ RMSE.2<-as.data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
 GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
 print(GGPLOT.6)
-
+RMSE.1
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
 
@@ -352,7 +353,7 @@ rmse.rep.poi = as.data.frame(rmse.rep.poi)
 
 hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.poi, col="red")
 print(hist.poi)
-
+rmse.train.poi
 pval <-sum(rmse.rep.poi > rmse.train.poi)/S
 print(pval)
 ```
@@ -364,10 +365,10 @@ ANSWER: Below, we show the simulated RMSE, together with the training RMSE (red)
 
 ```{r}
 Apps.poi = glm(Apps ~ . , family = poisson(link = "log"), data = College.train[,-17])
-predict(Apps.poi, newdata=College.test[,-17])
 
 rmse.test = rmse(College.test$Apps, predict(Apps.poi, newdata=College.test[,-17]))
 hist.poi <- hist.poi + geom_vline(xintercept = rmse.test, colour = "cornflowerblue")
+rmse.test
 plot(hist.poi)
 ```
 
@@ -461,7 +462,7 @@ plot(GGPLOT.13.2)
 
 
 #compute p-value
-pval<-sum(RMSE.rep.qp>RMSE.rep.qp)/nsim
+pval<-sum(RMSE.rep.qp>rmse.qpoi.train)/nsim
 print(pval)
 
 
