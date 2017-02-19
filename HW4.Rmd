@@ -337,8 +337,11 @@ plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 Apps.poi = glm(Apps ~ .  -college, family = poisson(link = "log"), data = College.train)
 summary(Apps.poi)
 plot(Apps.poi)
+
+Apps.poi$deviance/Apps.poi$df.residual
+pchisq(Apps.poi$deviance, Apps.poi$df.residual, lower.tail = F)
 ```
-While the residual plot shows a fairly uniform distribution and all variables are labeled as being signficant, some of the standard deviance residuals are huge- indicating some cause for concern- though the observations mostly stay on the line in the Normal Q-Q plot.
+While the residual plot shows a fairly uniform distribution and all variables are labeled as being signficant, some of the standard deviance residuals are huge- indicating some cause for concern. Furthermore, the estimate of overdispersion is 683.7, indicating that this model is very overdispersed. This is borne out in the chi-square test, where we get 0, suggesting that the model is not an adequate fit.
 
 10.  Generate 1000 replicates data sets using the coefficients from the Poisson model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.
 
