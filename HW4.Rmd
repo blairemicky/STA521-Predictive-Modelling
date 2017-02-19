@@ -498,6 +498,7 @@ X.nb = model.matrix(Apps.nb)
 Y.nb = matrix(NA, nrow(College.train), ncol = S)
 beta.nb@sigma = rnorm(S, Apps.nb$theta, Apps.nb$SE.theta)
 
+rmse.train.nb = rmse(predict(Apps.nb), College.train$Apps)
 rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
 rmse.rep.nb = rep(0, S)
 rmse.test.nb
@@ -512,13 +513,13 @@ rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
 rmse.nb.df
 rmse.rep.nb = as.data.frame(rmse.rep.nb)
 
-hist.nb <-ggplot(data= rmse.rep.nb, aes(x=rmse.rep.nb)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.test.nb, col="red")
+hist.nb <-ggplot(data= rmse.rep.nb, aes(x=rmse.rep.nb)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.nb, color = "red") + geom_vline(xintercept = rmse.test.nb, col="cornflowerblue")
 print(hist.nb)
 
 pval <-sum(rmse.rep.nb > rmse.test.nb)/S
 print(pval)
 ```
-
+ANSWER: From histogram, it is clear that the Negative Binomial helps to explain more of the variation in the data than the Poisson or Quasi-Poisson, as the RMSE on the test set is closer to the mean of the simulations than those of the former. However, the p-value is still 0, indicating that we should reject this model as well. 
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
