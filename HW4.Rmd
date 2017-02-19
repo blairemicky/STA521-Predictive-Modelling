@@ -154,10 +154,13 @@ RMSE.2 = data.frame(RMSE.2)
 RMSE.1<-rmse(College.train$Apps,predict(app_lm))
 
 #plot the histogram
-GGPLOT.0<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
+
+GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
   geom_histogram() + 
   geom_vline(xintercept = RMSE.1, color="red")
-plot(GGPLOT.0)
+plot(GGPLOT.4)
+
+
 #compute p-value
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -228,34 +231,29 @@ termplot(app_best, data=College.train,partial.resid=T, smooth=panel.smooth, se=T
 ```{r}
 
 set.seed(1)
-app_lm_best = lm(formula = log(Apps) ~ Private + log(Top10perc) + log(Top25perc) + 
-    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
-    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
-    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
-    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
-    log(Expend):log(Grad.Rate), data = College.train)
+
 nsim=1000
 rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
   return(rmse)
 }
 
-X<-model.matrix(app_lm_best)
-params<-sim(app_lm_best, nsim)
+X<-model.matrix(app_best)
+params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
 # note that we had log-transformed the response; hence we need to exponentiate the simulated responses
 for(j in 1:nsim){
 Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
-RMSE.2[j]<-rmse(Y[,j],exp(predict(app_lm_best)))
+RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
   
 }
 RMSE.2<-as.data.frame(RMSE.2)
 
 
 RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
-GGPLOT.best<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")
-print(GGPLOT.best)
+GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
+print(GGPLOT.6)
 
 pval<-sum(RMSE.2>RMSE.1)/nsim
 print(pval)
@@ -263,14 +261,13 @@ print(pval)
 ```
 
 
-
-We find that the observed value is closer to the mode of the simulated RMSE distribution. As indicated by the current p-value of 'r pval', the current model is a better fit to the observed data in the training set. Of course, this is based on a single summary statistic only (RMSE), and cannot be used for final approval of the model.
-
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 
 ANSWER: First we plot the predictions for the base model with main effects only, and the 'best' model obtained by BIC. We found that a few predictions have an excessively high residual, so we remove those from the plot.
+
 ```{r}
+# rerun the base model
 apps.lm0<-lm(Apps~., data=College.train[,-17])
 a.new<-predict(apps.lm0, newdata = College.test[,-17])
 b.new<-predict(app_lm_best, newdata=College.test)
@@ -280,20 +277,21 @@ b.new<-predict(app_lm_best, newdata=College.test)
 #plot(a.new,a.new-College.test$Apps)
 #plot(exp(b.new), exp(b.new)-College.test$Apps)
 
+
 # remove those with residual > 8000
 ind.a<-which(abs(a.new-College.test$Apps)>8000)
 ind.b<-which(abs(exp(b.new)-College.test$Apps)>8000)
 
 par(mfrow=c(1,2))
-plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a])
-plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b])
+plot(a.new[-ind.a],a.new[-ind.a]-College.test$Apps[-ind.a],xlab="Predicted", ylab="Residual",main ="Base model (#4)")
+plot(exp(b.new[-ind.b]), exp(b.new[-ind.b])-College.test$Apps[-ind.b],,xlab="Predicted", ylab="Residual",main="Best model (#6)")
 
 print(College$college[ind.a])
 print(College$college[ind.b])
 
 
 ```
-The wors fits (residual >8000) are for  "Antioch University"  and  "College of Saint Catherine" for the base model, and additionally for "Dordt College" in the 'best' linear  model. Next, we compute the RMSE of the test data.
+The wors fits (residual >8000) are for  "Antioch University"  and  "College of Saint Catherine" for the base model, and "College of Saint Catherine" and "Dordt College" for the 'best' linear  model. Next, we compute the RMSE of the test data.
 
 ```{r}
 RMSE.0.test<-sqrt(mean((a.new-College.test$Apps)^2))
@@ -309,11 +307,11 @@ With an RMSE of 'r RMSE.best' the out of sample prediction is better for the mod
 8. Add the test RMSE's from the two models to the respective  histograms from 4 and 6.   Are these values surprising relative to the RMSEs from the replicated data?  Explain.  What do you think this implies for model adequacy checks?  How accurately can we predict college applications?
 
 
-ANSWER:
+ANSWER: If the model was true, then yes, these values would be surprising. 
 ```{r}
 par(mfrow=c(1,2))
-plot(GGPLOT.0+geom_vline(xintercept = RMSE.0.test, col="yellow"))
-plot(GGPLOT.best+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
+plot(GGPLOT.4+geom_vline(xintercept = RMSE.0.test, col="yellow"))
+plot(GGPLOT.6+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 
 ```
 
