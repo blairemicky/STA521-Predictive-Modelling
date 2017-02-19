@@ -333,6 +333,7 @@ summary(Apps.poi)
 par(mfrow=c(2,2))
 plot(Apps.poi)
 
+#checking for overdispersion
 Apps.poi$deviance/Apps.poi$df.residual
 pchisq(Apps.poi$deviance, Apps.poi$df.residual, lower.tail = F)
 ```
@@ -398,6 +399,7 @@ Looking at the diagnostic plots, we find that using the overdispersed Poisson he
 
 
 ```{r}
+<<<<<<< HEAD
 # Quasi-Poisson with transformations and interactions
 Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
@@ -405,9 +407,31 @@ Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) +
     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
+=======
+<<<<<<< HEAD
+Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
+summary(Apps.qpoi)
+plot(Apps.qpoi)
+
+Apps.qpoi$deviance/Apps.qpoi$df.residual
+pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
+=======
+#Poisson using an offset
+<<<<<<< HEAD
+Apps.poi.trans <- glm(Apps ~ . -Apps - P.Undergrad - college, family = poisson(link = "log"), data = College.test)
+summary(Apps.poi.trans)
+plot(Apps.poi.trans)
+=======
+Apps.qpoi <- glm(Apps ~ . -Apps - college, family = quasipoisson(link = "log"), data = College.test)
+>>>>>>> 84b34012e8b66bc21088c3f4074f22aa7fd4d44c
 summary(Apps.qpoi)
 par(mfrow=c(2,2))
 plot(Apps.qpoi)
+<<<<<<< HEAD
+=======
+>>>>>>> c70ff7cd1e6e31ea4fc05cd1929d05e4340d85f9
+>>>>>>> 1bf65684003aba62c15368c8e51735dee44c9033
+>>>>>>> 84b34012e8b66bc21088c3f4074f22aa7fd4d44c
 ```
 
 
@@ -446,6 +470,9 @@ print(pval)
 Apps.nb <- glm.nb(Apps ~ . -Apps -college, data = College, link = log)
 summary(Apps.nb)
 plot(Apps.nb)
+
+Apps.nb$deviance/Apps.nb$df.residual
+pchisq(Apps.nb$deviance, Apps.nb$df.residual, lower.tail = F)
 ```
 With the inital model, there is somewhat of a trend in the residual plot, indicating a less than adequate model fit. 
 
