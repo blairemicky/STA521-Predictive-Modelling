@@ -3,8 +3,8 @@ title: 'HW4: Team 12'
 author: "Thomas Fleming, Blaire Li, Marc Ryser, Hengqian Zhang"
 date: "Due February 17, 2016"
 output:
-  pdf_document: default
-  html_notebook: default
+pdf_document: default
+html_notebook: default
 ---
 
 
@@ -25,10 +25,10 @@ Load the college application data from Lab1 and create the variable `Elite` by b
 data(College)
 
 College = College %>% mutate(college = rownames(College)) %>%
-                      mutate(Elite = factor(Top10perc > 50)) %>%
-                      mutate(Elite = recode(Elite, "TRUE" = "Yes", "FALSE" ="No")) %>%
-                      dplyr::select(c(-Accept,-Enroll))
-                      
+  mutate(Elite = factor(Top10perc > 50)) %>%
+  mutate(Elite = recode(Elite, "TRUE" = "Yes", "FALSE" ="No")) %>%
+  dplyr::select(c(-Accept,-Enroll))
+
 
 
 colnames(College)
@@ -68,11 +68,11 @@ Comment on any features in the plots, such as potential outliers, non-linearity,
 ```{r}
 #melt data
 College.train_melt = College.train %>% select(-c(Private,college, Elite)) %>% 
-                     gather(feature, value, c(Top10perc:Grad.Rate))
+  gather(feature, value, c(Top10perc:Grad.Rate))
 
 College.train_melt_f = College.train %>% select(-college) %>% 
-                                         select(c(Private,Apps,Elite)) %>% 
-                                         gather(feature, value, c(Private,Elite))
+  select(c(Private,Apps,Elite)) %>% 
+  gather(feature, value, c(Private,Elite))
 
 College.train_melt_1 = College.train_melt[1:2328,]
 College.train_melt_2 = College.train_melt[2329:4656,]
@@ -142,9 +142,9 @@ y_rep = matrix(0, nrow = nsim ,ncol = nrow(College.train))
 RMSE.2<-rep(0,nsim)
 #compute RMSE based on simulations
 for(i in 1:nsim){
-y_rep[i,] = X %*% params@coef[i,] + rnorm(1, 0, params@sigma[i])
-RMSE.2[i]<-rmse(predict(app_lm), y_rep[i,])
-
+  y_rep[i,] = X %*% params@coef[i,] + rnorm(1, 0, params@sigma[i])
+  RMSE.2[i]<-rmse(predict(app_lm), y_rep[i,])
+  
 }
 RMSE.2 = data.frame(RMSE.2)
 
@@ -158,9 +158,9 @@ GGPLOT.4<-ggplot(data= RMSE.2, aes(x=RMSE.2))+
 plot(GGPLOT.4)
 
 #compute p-value
-pval<-sum(RMSE.2>RMSE.1)/nsim
+pval.lm<-sum(RMSE.2>RMSE.1)/nsim
 RMSE.1
-print(pval)
+print(pval.lm)
 
 ```
 ANSWER: The RMSE of the observed data is not inconsistent with the simulated model. In fact, the tail probability, or p-value, of 'r pval' for RMSE is too large to not reject this model (based on this particular statistic).
@@ -190,11 +190,11 @@ However, there is still a linear trend between residuals and fitted value based 
 
 #log transformation on y
 app_lm_t = lm(log(Apps) ~ Private + log(Top10perc) + (Top25perc)^2 +       
-                           log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
-                           (Room.Board) + log(Books) + log(Personal) +         
-                           log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
-                           log(Expend) + (Grad.Rate)^2+ Elite, 
-                           data=College.train)
+                log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
+                (Room.Board) + log(Books) + log(Personal) +         
+                log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
+                log(Expend) + (Grad.Rate)^2+ Elite, 
+              data=College.train)
 summary(app_lm_t)
 #diagnostic plots
 par(mfrow = c(2,2))
@@ -205,11 +205,11 @@ Finally, we applied step function(BIC) to see if there are potential interation 
 ```{r}
 # Systematic check for interactions
 app_lm_t2<-lm(log(Apps) ~ Private + log(Top10perc) + (Top25perc)^2 +       
-                           log(F.Undergrad) + log(P.Undergrad) +  Outstate + 
-                           (Room.Board) + log(Books) + log(Personal) +         
-                           log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
-                           log(Expend) + Grad.Rate+ (Elite)^2, 
-                           data=College.train)
+                log(F.Undergrad) + log(P.Undergrad) +  Outstate + 
+                (Room.Board) + log(Books) + log(Personal) +         
+                log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
+                log(Expend) + Grad.Rate+ (Elite)^2, 
+              data=College.train)
 
 #our best linear model using BIC
 app_best = step(app_lm_t2, k=log(nrow(College.train)),trace=0)
@@ -237,34 +237,34 @@ rmse = function(y, ypred){
 }
 
 X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
-                                       log(F.Undergrad) + log(P.Undergrad) + Outstate + 
-                                       Room.Board + log(PhD) + log(S.F.Ratio) + 
-                                       log(Expend) + Grad.Rate + Private:Room.Board + 
-                                       log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
-                                       log(P.Undergrad):Outstate + Outstate:log(Expend) + 
-                                       Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-                                       log(Expend):Grad.Rate, 
-                                       data = College.train)
+                  log(F.Undergrad) + log(P.Undergrad) + Outstate + 
+                  Room.Board + log(PhD) + log(S.F.Ratio) + 
+                  log(Expend) + Grad.Rate + Private:Room.Board + 
+                  log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
+                  log(P.Undergrad):Outstate + Outstate:log(Expend) + 
+                  Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
+                  log(Expend):Grad.Rate, 
+                data = College.train)
 params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
 # note that we had log-transformed the response; hence we need to exponentiate the simulated responses
 for(j in 1:nsim){
-Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
-RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
+  Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+  RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
   
 }
 RMSE.2<-as.data.frame(RMSE.2)
 
 
-RMSE.1<-rmse(College.train$Apps,exp(predict(app_best)))
-GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1, col="red")+labs(x="RMSE", y="Count")
+RMSE.1.bestlm<-rmse(College.train$Apps,exp(predict(app_best)))
+GGPLOT.6<-ggplot(data= RMSE.2, aes(x=RMSE.2))+geom_histogram() + geom_vline(xintercept = RMSE.1.bestlm, col="red")+labs(x="RMSE", y="Count")
 print(GGPLOT.6)
-RMSE.1 # obeserved
+
 
 #pvalue
-pval<-sum(RMSE.2>RMSE.1)/nsim
-print(pval)
+pval.best<-sum(RMSE.2>RMSE.1)/nsim
+print(pval.best)
 
 ```
 
@@ -369,8 +369,8 @@ hist.poi <-ggplot(data= rmse.rep.poi, aes(x=rmse.rep.poi)) + geom_histogram(fill
 print(hist.poi)
 rmse.train.poi
 
-pval <-sum(rmse.rep.poi > rmse.train.poi)/S
-print(pval)
+pval.poi <-sum(rmse.rep.poi > rmse.train.poi)/S
+print(pval.poi)
 ```
 
 
@@ -408,11 +408,11 @@ Next, we used the predictor transformations and interactions from the best linea
 ```{r}
 # Quasi-Poisson with transformations and interactions
 Apps.qpoi.2 <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
-    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
-    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
-    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
-    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
-    log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
+                     log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+                     log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
+                     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+                     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
+                     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
 
 summary(Apps.qpoi.2)
 par(mfrow=c(2,2))
@@ -502,11 +502,11 @@ The dispersion parameter for this model is quite small (3.6). Looking at the res
 
 ```{r}
 Apps.nb <- glm.nb(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
-    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
-    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
-    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
-    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
-    log(Expend):log(Grad.Rate), data = College.train, link = log)
+                    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+                    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
+                    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+                    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
+                    log(Expend):log(Grad.Rate), data = College.train, link = log)
 summary(Apps.nb)
 par(mfrow = c(2, 2))
 plot(Apps.nb, labels.id = College.train$college)
@@ -514,7 +514,7 @@ plot(Apps.nb, labels.id = College.train$college)
 Apps.nb$deviance/Apps.nb$df.residual
 p.val.22<-pchisq(Apps.nb$deviance, Apps.nb$df.residual, lower.tail = F)
 ```
- After adding in the transformations we seen an improvement in the residual and std deviance residual plots. The p-value for overdispersion is now at 'r p.val.22', indicating that we cannot reject this model. The remaining cause for concern is Talladega College with a high residual and std deviance residual - this college is an outlier, but since it does not have high leverage and a Cooks' distance below .5 we are not worried.
+After adding in the transformations we seen an improvement in the residual and std deviance residual plots. The p-value for overdispersion is now at 'r p.val.22', indicating that we cannot reject this model. The remaining cause for concern is Talladega College with a high residual and std deviance residual - this college is an outlier, but since it does not have high leverage and a Cooks' distance below .5 we are not worried.
 
 15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?
 
@@ -532,9 +532,9 @@ rmse.rep.nb = rep(0, S)
 rmse.test.nb
 
 for (s in 1:S) {
-mu = exp(X.nb %*% beta.nb@coef[s, ])
-Y.nb[,s] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
-rmse.rep.nb[s] = rmse(predict(Apps.nb), Y.nb[,s])
+  mu = exp(X.nb %*% beta.nb@coef[s, ])
+  Y.nb[,s] = rnegbin(n, mu=mu, theta=beta.nb@sigma[s])
+  rmse.rep.nb[s] = rmse(predict(Apps.nb), Y.nb[,s])
 }
 
 rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
@@ -544,8 +544,8 @@ rmse.rep.nb = as.data.frame(rmse.rep.nb)
 hist.nb <-ggplot(data= rmse.rep.nb, aes(x=rmse.rep.nb)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.nb, color = "red") + geom_vline(xintercept = rmse.test.nb, col="cornflowerblue") + xlab("RMSE") + ylab("Count")
 print(hist.nb)
 
-pval <-sum(rmse.rep.nb > rmse.test.nb)/S
-print(pval)
+pval.nb <-sum(rmse.rep.nb > rmse.test.nb)/S
+print(pval.nb)
 ```
 ANSWER: From the histogram, it is clear that the Negative Binomial helps to explain more of the variation in the data than the Poisson or Quasi-Poisson. Judging from the small RMSE for the training data, we may be overfitting the data. The RMSE of the test set is closer to the mean of the simulations than those of the former, but the p-value is small at  'r pval', indicating that we should be careful when using the model for prediction purposes!
 
@@ -558,7 +558,7 @@ Write a function to calculate coverage (the input should be the fitted model obj
 pi.lm =   predict.lm(object = apps.lm0,newdata = 
                        College.test[,-17],se.fit=TRUE,interval="prediction",level=0.95)$fit[,2:3]
 pi.best = exp(predict.lm(object = app_best,newdata =  
-                       College.test[,-17],se.fit=TRUE,interval="prediction",level=0.95)$fit[,2:3])
+                           College.test[,-17],se.fit=TRUE,interval="prediction",level=0.95)$fit[,2:3])
 #get prediction interval for poisson regression with simulation  
 S = 1000
 beta = sim(Apps.poi, n.sims = 1000)
@@ -605,37 +605,37 @@ beta = rmvnorm(nsim, coef(Apps.nb), vcov(Apps.nb))
 theta = rnorm(nsim, Apps.nb$theta, Apps.nb$SE.theta) 
 y.rep = matrix(NA, nsim, n)
 for (i in 1:nsim) {
-mu = exp(X %*% beta[i,])
-y.rep[i,] = rnegbin(n, mu=mu, theta=theta[i]) }
+  mu = exp(X %*% beta[i,])
+  y.rep[i,] = rnegbin(n, mu=mu, theta=theta[i]) }
 
 pi.nb = t(apply(y.rep, 2, function(x) {quantile(x, c((1 - .95)/2,.5 + .95/2))}))
 ```
 
 ```{r}
 coverage = function(mod,test.df){
-      y = test.df[,"Apps"]
-     if(identical(mod,apps.lm0)){
-      return(mean(y >= pi.lm[,1] & y <= pi.lm[,2]))
-     }
-     if(identical(mod,app_best)){
-       return(mean(y >= pi.best[,1] & y <= pi.best[,2]))
-     }
-     if(identical(mod,Apps.poi)){
-       return(mean(y >= pi.poi[,1] & y <= pi.poi[,2]))
-     }
-     if(identical(mod,Apps.qpoi.2)){
-       return(mean(y >= pi.qpoi.2[,1] & y <= pi.qpoi.2[,2]))
-     }
-     if(identical(mod,Apps.nb)){
-       return(mean(y >= pi.nb[,1] & y <= pi.nb[,2]))
-     }
+  y = test.df[,"Apps"]
+  if(identical(mod,apps.lm0)){
+    return(mean(y >= pi.lm[,1] & y <= pi.lm[,2]))
+  }
+  if(identical(mod,app_best)){
+    return(mean(y >= pi.best[,1] & y <= pi.best[,2]))
+  }
+  if(identical(mod,Apps.poi)){
+    return(mean(y >= pi.poi[,1] & y <= pi.poi[,2]))
+  }
+  if(identical(mod,Apps.qpoi.2)){
+    return(mean(y >= pi.qpoi.2[,1] & y <= pi.qpoi.2[,2]))
+  }
+  if(identical(mod,Apps.nb)){
+    return(mean(y >= pi.nb[,1] & y <= pi.nb[,2]))
+  }
 }
 # coverage for each of the 5 models that you fit
-coverage(apps.lm0,College.test[,-17])
-coverage(app_best,College.test[,-17])
-coverage(Apps.poi,College.test[,-17])
-coverage(Apps.qpoi.2,College.test[,-17])
-coverage(Apps.nb,College.test[,-17])
+a = coverage(apps.lm0,College.test[,-17])
+b =coverage(app_best,College.test[,-17])
+c =coverage(Apps.poi,College.test[,-17])
+d =coverage(Apps.qpoi.2,College.test[,-17])
+e =coverage(Apps.nb,College.test[,-17])
 ```
 ```{r}
 #plots of the confidence intervals versus ordered by the prediction, with the left out data added as points
@@ -645,12 +645,12 @@ df = data.frame(apps = College.test$Apps,
 df = df %>% arrange(pred)   # sort by prediction
 
 gp = ggplot(df, aes(x=pred, y=apps)) + 
-     geom_ribbon(aes(ymin = lwr, ymax = upr), 
-                fill = "blue", alpha = 0.2) + 
-     geom_point(aes(y=apps)) +
- xlab("predicted value") +
- ylab("Apps") +
- ggtitle("95% Prediction Intervals under linear regression Model(apps.lm0)")
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              fill = "blue", alpha = 0.2) + 
+  geom_point(aes(y=apps)) +
+  xlab("predicted value") +
+  ylab("Apps") +
+  ggtitle("95% Prediction Intervals under linear regression Model(apps.lm0)")
 gp
 
 # plot for app_best
@@ -660,12 +660,12 @@ df = data.frame(apps = College.test$Apps,
 df = df %>% arrange(pred)   # sort by prediction
 
 gp = ggplot(df, aes(x=pred, y=apps)) + 
-     geom_ribbon(aes(ymin = lwr, ymax = upr), 
-                fill = "blue", alpha = 0.2) + 
-     geom_point(aes(y=apps)) +
- xlab("predicted value") +
- ylab("Apps") +
- ggtitle("95% Prediction Intervals under linear regression Model(app_best)")
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              fill = "blue", alpha = 0.2) + 
+  geom_point(aes(y=apps)) +
+  xlab("predicted value") +
+  ylab("Apps") +
+  ggtitle("95% Prediction Intervals under linear regression Model(app_best)")
 gp
 
 #plot for Apps.poi
@@ -675,12 +675,12 @@ df = data.frame(apps = College.test$Apps,
 df = df %>% arrange(pred)   # sort by prediction
 
 gp = ggplot(df, aes(x=pred, y=apps)) + 
-     geom_ribbon(aes(ymin = lwr, ymax = upr), 
-                fill = "blue", alpha = 0.2) + 
-     geom_point(aes(y=apps)) +
- xlab("predicted value") +
- ylab("Apps") +
- ggtitle("95% Prediction Intervals under Poisson regression Model(Apps.poi)")
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              fill = "blue", alpha = 0.2) + 
+  geom_point(aes(y=apps)) +
+  xlab("predicted value") +
+  ylab("Apps") +
+  ggtitle("95% Prediction Intervals under Poisson regression Model(Apps.poi)")
 gp
 
 #plot for Apps.qpoi.2
@@ -690,12 +690,12 @@ df = data.frame(apps = College.test$Apps,
 df = df %>% arrange(pred)   # sort by prediction
 
 gp = ggplot(df, aes(x=pred, y=apps)) + 
-     geom_ribbon(aes(ymin = lwr, ymax = upr), 
-                fill = "blue", alpha = 0.2) + 
-     geom_point(aes(y=apps)) +
- xlab("predicted value") +
- ylab("Apps") +
- ggtitle("95% Prediction Intervals under QuasiPoisson regression Model(Apps.qpoi.2)")
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              fill = "blue", alpha = 0.2) + 
+  geom_point(aes(y=apps)) +
+  xlab("predicted value") +
+  ylab("Apps") +
+  ggtitle("95% Prediction Intervals under QuasiPoisson regression Model(Apps.qpoi.2)")
 gp
 
 #plot for Apps.nb
@@ -705,12 +705,12 @@ df = data.frame(apps = College.test$Apps,
 df = df %>% arrange(pred)   # sort by prediction
 
 gp = ggplot(df, aes(x=pred, y=apps)) + 
-     geom_ribbon(aes(ymin = lwr, ymax = upr), 
-                fill = "blue", alpha = 0.2) + 
-     geom_point(aes(y=apps)) +
- xlab("predicted value") +
- ylab("Apps") +
- ggtitle("95% Prediction Intervals under Negative Binomial Model(Apps.nb")
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              fill = "blue", alpha = 0.2) + 
+  geom_point(aes(y=apps)) +
+  xlab("predicted value") +
+  ylab("Apps") +
+  ggtitle("95% Prediction Intervals under Negative Binomial Model(Apps.nb")
 gp
 ```
 
@@ -722,6 +722,15 @@ gp
 
 17.  Provide a table  with 
 the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) the predictive check p-value with one row for each of the 5 models and comment the results.  Which model do you think is best and why? 
+```{r}
+RMSE_o = c(RMSE.1,RMSE.1.bestlm,rmse.train.poi,rmse.qpoi.train,rmse.train.nb)
+RMSE_t = c(RMSE.0.test, RMSE.best.test,rmse.test, rmse.qpoi.test,rmse.test.nb)
+coverage = c(a,b,c,d,e)
+pvalue = c(pval.lm,pval.best,pval.poi,pval.train,pval.nb)
+row =c("apps.lm0","app_best","Apps.poi","Apps.qpoi.2","Apps.nb")
+out = data.frame(row.names = row,RMSE_o,RMSE_t,coverage,pvalue)
+kable(out)
+```
 
 18.  For your "best" model  provide a nicely formatted table (use `kable()` or `xtable()`) of relative risks and 95% confidence intervals.  Pick 5 of the most important variables and provide a paragraph that provides an interpretation of the parameters (and intervals) that can be provided to a university admissions officer about which variables increase admissions.  
 
@@ -747,7 +756,7 @@ p(y \mid \lambda) & = \frac{\lambda^y e^{-\lambda}} {y!} \\
 p(\lambda \mid  \mu, \theta) & = \frac{(\theta/ \mu)^\theta}{\Gamma(\theta)} \lambda^{\theta - 1} e^{- \lambda \theta/\mu} \\
 & \\
 p(Y \mid \mu, \theta) & = \int p(Y \mid \lambda) p(\lambda \mid \theta, \theta/\mu) d \lambda \\
- & =   \frac{ \Gamma(y + \theta)}{y! \Gamma(\theta)}
+& =   \frac{ \Gamma(y + \theta)}{y! \Gamma(\theta)}
 \left(\frac{\theta}{\theta + \mu}\right)^{\theta}
 \left(\frac{\mu}{\theta + \mu}\right)^{y} \\
 Y \mid \mu, \theta & \sim NB(\mu, \theta) 
