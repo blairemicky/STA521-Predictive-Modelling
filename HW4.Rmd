@@ -544,7 +544,7 @@ print(hist.nb)
 pval <-sum(rmse.rep.nb > rmse.test.nb)/S
 print(pval)
 ```
-ANSWER: From histogram, it is clear that the Negative Binomial helps to explain more of the variation in the data than the Poisson or Quasi-Poisson, as the RMSE on the test set is closer to the mean of the simulations than those of the former. However, the p-value is still 0, indicating that we should reject this model as well. 
+ANSWER: From the histogram, it is clear that the Negative Binomial helps to explain more of the variation in the data than the Poisson or Quasi-Poisson, as the RMSE on the test set is closer to the mean of the simulations than those of the former. However, the p-value is  0.034, indicating that we should be careful when using the model for prediction purposes.
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
 For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
