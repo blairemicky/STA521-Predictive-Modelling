@@ -447,15 +447,16 @@ pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
 ```{r}
 S = 1000
 beta.q = sim(Apps.qpoi, n.sims = 1000)
-X.q = model.matrix(Apps ~ . -Apps -college, data = College.test)
-Y.q = matrix(NA, nrow(College.test), ncol = S)
+X.q = model.matrix(Apps.qpoi)
+Y.q = matrix(NA, nrow(College.train), ncol = S)
 
 rmse.test.qpoi = rmse(predict(Apps.qpoi), College.test$Apps)
 rmse.rep.qpoi = rep(0, S)
 
 for (s in 1:S) {
-  Y.q[, s] = exp(X.q %*% beta.q@coef[s,]) + rnorm(1, 0, beta.q@sigma[s])
-  rmse.rep.qpoi[s] = rmse(predict(Apps.qpoi), Y[, s] )
+  lambda = exp(X %*% beta.q@coef[s,]) 
+  Y.q[, s] = rpois(nrow(College.train),lambda)
+  rmse.rep.poi[s] = rmse(predict(Apps.qpoi), Y.q[, s])
 }
 
 rmse.q.df = data.frame(rsme.test.qpoi = rmse.test.qpoi, rmse.rep.qpoi = rmse.rep.qpoi)
@@ -474,14 +475,19 @@ print(pval)
 14. Build a model using the negative binomial model (consider transformations and interactions if needed) and examine diagnostic plots.  Are there any suggestions of problems with this model?
 
 ```{r}
-Apps.nb <- glm.nb(Apps ~ . -Apps -college, data = College, link = log)
+Apps.nb <- glm.nb(Apps ~ Private + log(Top10perc) + log(Top25perc) + 
+    log(F.Undergrad) + log(P.Undergrad) + Outstate + Room.Board + 
+    log(PhD) + log(S.F.Ratio) + log(Expend) + log(Grad.Rate) + 
+    Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
+    Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
+    log(Expend):log(Grad.Rate), data = College.train, link = log)
 summary(Apps.nb)
 plot(Apps.nb)
 
 Apps.nb$deviance/Apps.nb$df.residual
 pchisq(Apps.nb$deviance, Apps.nb$df.residual, lower.tail = F)
 ```
-With the inital model, there is somewhat of a trend in the residual plot, indicating a less than adequate model fit. 
+ANSWER: After adding in the transformations that we used in our linear model, the model improved a bit. Though estimated overdispersion is 1.05, the p-value is now at .17, indicating that we cannot reject this model. The residual plot and scale location plots resembles a uniform distribution- though the points are concentrated- and the only real cause for concern is some large residuals with the largest being around 8.
 
 15. Carry out the predictive checks using simulated replicates with RMSE and add RMSE from the test data and observed data to your plot.  What do these suggest about 1) model adequacy and 2) model comparison?  Which model out of all that you have fit do you recommend?
 
