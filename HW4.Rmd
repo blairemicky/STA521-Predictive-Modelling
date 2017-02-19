@@ -60,7 +60,7 @@ summary(College.test[,-17])
 ```
 ANSWER: Catergorical variables: Private and Elite. College name should not be treated as a variable. All other variables left should be treated as numerical variables. 
 
-From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce bias since private school and public school have many difference.
+From the summaries given above, variables in both train set and test set have similar ranges and mean. One thing we need pay attention to is that the ratio of public school vs private school in training set is 0.43 while the ratio in test set is only 0.24. This may introduce bias since private school and public school have many differences.
 
 2. Create scatter plots of predictors versus `Apps` using the training data only.  If you use pairs or preferably `ggpairs` make sure that `Apps` is on the y-axis in plots versus the other predictors.  (Make sure that the plots are legible, which may require multiple plots.)  
 Comment on any features in the plots, such as potential outliers, non-linearity, needs for transformations etc.
@@ -105,7 +105,7 @@ ggplot(College.train_melt_4, aes(value, Apps)) +
 
 ANSWER:We first looked at two categorical variables: Elite and Private. Under Yes or No, most colleges have applications less than 15000. So, we can consider applications greater than 20000 are outliers.
 
-We then paid attention to numerical variables. We could see clearly that the number of full time undergraduate has strong linear relation with applications. Variables 'Top10perc' and 'Top25perc' have weak linear relationship with applications. For other numberical variables, there is no linear relation with applications. Outliers exist in all variables which indicate appropriate tranformation is needed. 
+We then paid attention to numerical variables. We could see clearly that the number of full time undergraduate has strong linear relation with applications. Variables 'Top10perc' and 'Top25perc' have weak linear relationship with applications. For other numerical variables, there is no linear relation with applications. Outliers exist in all variables which indicate appropriate tranformation is needed. 
 
 3.  Build a linear regression model to predict `Apps` from the other predictors (without any transformations).  Present model summaries and diagnostic plots.   Based on diagnostic plots  using residuals,  comment on the  adequacy of your model.
 ```{r}
@@ -121,7 +121,6 @@ plot(app_lm, labels.id = College.train$college)
 ANSWER: From the residual plot vs fitted value, we see that the residual variance increases. The model predicts negative Apps, which is not meaningful. From the QQplot, there is clear heavy tail. From scale-location plot, we can see an increasing, linear trend of the standardized residuals vs fitted values. Therefore, we can conclude that a linear model without transformations and/or interactions is not adequate.
 
 4. Generate 1000 replicates data sets using the coefficients from the model you fit above.  Using RMSE as a statistic, $\sqrt{\sum_i(y^{\text{rep}} - \hat{y}_i^{\text{rep}})^2/n }$, how does the RMSE from the model based on the training data compare to RMSE's based on the replicated data.  What does this suggest about model adequacy?   Provide a histogram of the RMSE's with a line showing the location of the observed RMSE and compute a p-value.  Hint:  write a function to calculate RMSE.
-
 
 
 ```{r}
@@ -163,14 +162,16 @@ RMSE.1
 print(pval)
 
 ```
-ANSWER: The RMSE of the observed data is not inconsistent with the simulated model. In fact the tail probability, or p-value, of 'r pval' for RMSE is too large to not reject this model (based on this particular statistic).
+ANSWER: The RMSE of the observed data is not inconsistent with the simulated model. In fact, the tail probability, or p-value, of 'r pval' for RMSE is too large to not reject this model (based on this particular statistic).
 
 
 5. Build a second model, considering transformations of the response and predictors, possible interactions, etc with the goal of trying to achieve  a model where assumptions for linear regression are satisfied, providing justification for your choices.
 Comment on  how well the assumptions are met and and issues that diagnostic plots may reveal.
 
 
-ANSWER: First we perform a log transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y.
+
+ANSWER: First we perform a log transformation on 'Apps'. From the residual plot, we can see that the latter is much better than for the non-transformed model. We also applied the boxcox procedure to find the best y tranformation. And we can see 0 is close to the best parameter. Therefore, for a better intepratation of y, we admit log transformation on y. (More below)
+
 
 ```{r}
 #log transformation on y
@@ -182,7 +183,7 @@ plot(app_lm_yt)
 boxcox(app_lm)
 ```
 
-However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to predictor transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend.
+However, there is still a linear trend between residuals and fitted value based on the residual plots. We next move to x transformations. Let us go back to the scatter plots in question 2. As we have already seen, data is not evenly distributed. We applied log transformation on x which have many leverage points. For 'Top25perc' and 'Grad.Rate', we applied quadratic transformation on x since there is quadartic trend. (More below)
 
 ```{r}
 
@@ -199,15 +200,14 @@ par(mfrow = c(2,2))
 plot(app_lm_t)
 ```
 
-
 Finally, we applied step function(BIC) to see if there are potential interation terms. From the plots, we can see, both residual plots and QQplot are much better than before. There, we finally choose the model given below are the best linear model for this data. 
 ```{r}
 # Systematic check for interactions
-app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +       
-                           log(F.Undergrad) +log(P.Undergrad) +  Outstate + 
+app_lm_t2<-lm(log(Apps) ~ Private + log(Top10perc) + (Top25perc)^2 +       
+                           log(F.Undergrad) + log(P.Undergrad) +  Outstate + 
                            (Room.Board) + log(Books) + log(Personal) +         
                            log(PhD)+Terminal+log(S.F.Ratio)+ perc.alumni +    
-                           log(Expend) + Grad.Rate+ Elite)^2, 
+                           log(Expend) + Grad.Rate+ (Elite)^2, 
                            data=College.train)
 
 #our best linear model using BIC
@@ -271,7 +271,7 @@ ANSWER: We find that the observed value is closer to the mode of the simulated R
 7. Use your two fitted models to predict the number of applications for the testing data, `College.test`.  Plot the predicted residuals $y_i - \hat{y}_i$  versus the predictions.  Are there any cases where the model does a poor job of predicting?  Compute the RMSE using the test data where now RMSE = $\sqrt{\sum_{i = 1}^{n.test}(y_i - \hat{y}_i)^2/n.test}$ where the sum is over the test data.  Which model is better for the out of sample prediction?
 
 
-ANSWER: First we plot the predictions for the base model with main effects only, and the 'best' model obtained by BIC. We found that a few predictions have an excessively high residual, so we remove those from the plot.
+ANSWER: First we plot the predictions for the base model with main effects only, and the 'best' model obtained by BIC. We found that a few predictions have an excessively high residuals, so we removed those from the plot.
 
 ```{r}
 # rerun the base model
@@ -315,16 +315,16 @@ par(mfrow=c(1,2))
 plot(GGPLOT.4+geom_vline(xintercept = RMSE.0.test, col="yellow"))
 plot(GGPLOT.6+ geom_vline(xintercept = RMSE.best.test, col="yellow"))
 
-pval<-sum(RMSE.0.test>RMSE.2)/nsim
-print(pval)
-pval<-sum(RMSE.best.test>RMSE.2)/nsim
-print(pval)
+pval.1<-sum(RMSE.0.test>RMSE.2)/nsim
+print(pval.1)
+pval.2<-sum(RMSE.best.test>RMSE.2)/nsim
+print(pval.2)
 
 
 
 ```
 
-ANSWER: The values. 
+ANSWER: The p-values of the test data are 'r pval.1' and 'r pval.2', respectively. This means if the model were true, the observed test RMSE's are quite unlikely. This implies that we cannot accurately predict the left out data with this model
 
 
 9.  As the number of applications is a count variable, a Poisson regression model is a natural alternative for modelling this data.   Build a Poisson model using only main effects as in problem 4.   Comment on the model adequacy based on diagnostic plots and other summaries.  Is there evidence that there is lack of fit?
