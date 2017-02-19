@@ -412,7 +412,7 @@ plot(hist.poi)
 
 12.  As in problem 6,  consider transformations of the predictors and interactions to improve your model justifying your choices.  Provide a summary of the model and comment on diagnostics and summaries for model fit.   Is there evidence of overdispersion?  Explain.
 
-ANSWER: Given the overdispersion, a first step is to add a variable dispersion parameter, i.e., use a quasi-Poisson model. Of course, this will not change the deviance as the likelihood remains the same, but it will increase the standard errors and give a better idea of which predictors are important.
+ANSWER: Given the overdispersion, a first step is to add a variable dispersion parameter, i.e., use a quasi-Poisson model. Of course, this will not change the deviance as the likelihood remains the same, but it will increase the standard errors and give a better idea of which predictors are important. (See explanation of plots below)
 
 ```{r}
 # Quasi-Poisson 
@@ -423,8 +423,9 @@ plot(Apps.qpoi)
 ```
 
 
-Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of ~10 to below 2, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is 
+Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residuals down from a max of an absolute value of 100 to a max of an absolute value of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot.
 
+Below, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is a lower estimate of overdispersion at 284.2, but the p-value is still zero, indicating that we should reject this model as well. 
 
 ```{r}
 # Quasi-Poisson with transformations and interactions
@@ -434,11 +435,12 @@ Apps.qpoi <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) +
     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
+summary(Apps.qpoi)
+plot(Apps.qpoi)
 
 Apps.qpoi$deviance/Apps.qpoi$df.residual
 pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
 ```
-While the quassipoisson ostensibly resulted in an improved outcome, considering that it brought the standard deviance residuals way down, its estimated overdispersion is still very high, and the chi-square test indicates that this model is not a good fit either.
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
 
