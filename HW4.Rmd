@@ -194,6 +194,7 @@ app_lm_t = lm(log(Apps) ~ Private + log(Top10perc) + (Top25perc)^2 +
                            data=College.train)
 summary(app_lm_t)
 #diagnostic plots
+par(mfrow = c(2,2))
 plot(app_lm_t)
 ```
 
@@ -209,7 +210,7 @@ app_lm_t2<-lm(log(Apps) ~ (Private + log(Top10perc) + (Top25perc)^2 +
                            data=College.train)
 
 #our best linear model using BIC
-app_best = step(app_lm_t2, k=log(nrow(College.train)))
+app_best = step(app_lm_t2, k=log(nrow(College.train)),trace=0)
 
 summary(app_best)
 #diagnostic plots
