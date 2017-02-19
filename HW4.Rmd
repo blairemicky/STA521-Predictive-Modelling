@@ -384,11 +384,9 @@ plot(Apps.qpoi.1)
 ```
 
 
-<<<<<<< HEAD
-Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of ~10 to below 2, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is >250.
-=======
-Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residuals down from a max of an absolute value of 100 to a max of an absolute value of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot.
->>>>>>> ce2229f920f747bed43261a8564601f3e56ef6a1
+Looking at the diagnostic plots, we find that using the overdispersed Poisson helped substantially. It brought the standard deviance residual from a max of an absolute value of 100 to a max of a little less than 4, and a max Std Pearson residual from 150 to less than 5.  There is still a trend in the Scale-Location plot. 
+
+Next, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. The overdispersion has been lowered by accounting for the additional terms, but there is still a lack of fit as indicated by the ratio of the residual deviance by the residual degrees of freedom which is >250.
 
 Below, we used the predictor transformations and interactions from the best linear model to see if this would resolve some of these issues (note we cannot use the step procedure for the QP because there is no explicit likelihood for this model). As shown below, we found that the pattern in the residual plot is attenuated, and the trend in the std deviance residual plot is lower than in the previous model. In addition, there is a lower estimate of overdispersion at 284.2, but the p-value is still zero, indicating that we should reject this model as well. 
 
@@ -400,8 +398,6 @@ Apps.qpoi.2 <- glm(Apps ~ Private + log(Top10perc) + log(Top25perc) +
     Private:Room.Board + log(Top10perc):log(Top25perc) + log(P.Undergrad):Outstate + 
     Outstate:log(Expend) + Room.Board:log(Expend) + log(S.F.Ratio):log(Grad.Rate) + 
     log(Expend):log(Grad.Rate), family = quasipoisson(link = "log"), data = College.train)
-<<<<<<< HEAD
-
 
 summary(Apps.qpoi.2)
 par(mfrow=c(2,2))
@@ -410,14 +406,6 @@ plot(Apps.qpoi.2)
 
 Apps.qpoi.2$deviance/Apps.qpoi.2$df.residual
 pchisq(Apps.qpoi.2$deviance, Apps.qpoi.2$df.residual, lower.tail = F)
-
-=======
-summary(Apps.qpoi)
-plot(Apps.qpoi)
-
-disperse.qpoi = Apps.qpoi$deviance/Apps.qpoi$df.residual
-pchisq(Apps.qpoi$deviance, Apps.qpoi$df.residual, lower.tail = F)
->>>>>>> ce2229f920f747bed43261a8564601f3e56ef6a1
 ```
 
 13. Carry out the predictive check using simulated data from the Poisson model.   Add the RMSE for the observed data to the plot and the RMSE for prediction on the test data.  Does this suggest that the model is OK?
@@ -506,6 +494,7 @@ class(Apps.nb) = "glm"
 beta.nb = sim(Apps.nb, n.sims = 1000)
 X.nb = model.matrix(Apps.nb)
 Y.nb = matrix(NA, nrow(College.train), ncol = S)
+beta.nb@sigma = rnorm(S, Apps.nb$theta, Apps.nb$SE.theta)
 
 rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
 rmse.rep.nb = rep(0, S)
