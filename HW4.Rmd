@@ -735,13 +735,21 @@ It also has a great coverage of 0.94. Predictive check p-value is also bigger th
 
 18.  For your "best" model  provide a nicely formatted table (use `kable()` or `xtable()`) of relative risks and 95% confidence intervals.  Pick 5 of the most important variables and provide a paragraph that provides an interpretation of the parameters (and intervals) that can be provided to a university admissions officer about which variables increase admissions. 
 ```{r}
+#since our best model is linear regression model, relative risk doesn't make much sense here, so we just
+#provide the coefficient estimates and the confidence intervals.
 summary(app_best)
-confint(app_best)
-```
-```{r}
-exp(app_best$coefficients)
+out = cbind(app_best$coefficients,confint(app_best))
+kable(out)
+
 ```
 
+```{r}
+#pick 5 of the most important variables and their confidence intervals
+cbind(app_best$coefficients[5:9],confint(app_best,c("log(F.Undergrad)","log(P.Undergrad)","Outstate","Room.Board","log(PhD)")))
+```
+   
+ANSWER:   
+   The five most important variables coefficient estimates are listed in the table above, along with their confidence intervals. The number of full time undergraduates, percentage of facaulty with Phd's seem to have a positive effect on application, while the number of part time undergraduates and out of state tuition seem to have a negative effect on the number of applications.From the model, Room and board costs seems to have a positive relationship, which appears to contradict with our common sense. However, considering the fact that private and prestigious schools usually have high cost of room and board, it makes sense that higher room and board costs have a positive effect on the number of applications.
 
 ### Some Theory   
 
