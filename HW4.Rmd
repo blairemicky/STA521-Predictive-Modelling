@@ -637,6 +637,7 @@ e =coverage(Apps.nb,College.test[,-17])
 a;b;c;d;e
 ```
 ```{r}
+par(mfrow=c(2,2))
 #plots of the confidence intervals versus ordered by the prediction, with the left out data added as points
 df = data.frame(apps = College.test$Apps, 
                 pred = predict(apps.lm0,College.test[,-17],type="response"),  
