@@ -235,22 +235,24 @@ rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
   return(rmse)
 }
-
-X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
-                  log(F.Undergrad) + log(P.Undergrad) + Outstate + 
-                  Room.Board + log(PhD) + log(S.F.Ratio) + 
-                  log(Expend) + Grad.Rate + Private:Room.Board + 
-                  log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
-                  log(P.Undergrad):Outstate + Outstate:log(Expend) + 
-                  Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-                  log(Expend):Grad.Rate, 
+#
+#X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
+#                  log(F.Undergrad) + log(P.Undergrad) + Outstate + 
+#                  Room.Board + log(PhD) + log(S.F.Ratio) + 
+#                  log(Expend) + Grad.Rate + Private:Room.Board + 
+#                  log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
+#                  log(P.Undergrad):Outstate + Outstate:log(Expend) + 
+#                  Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
+#                  log(Expend):Grad.Rate, 
+#                data = College.train)
+X<-model.matrix(app_best, 
                 data = College.train)
 params<-sim(app_best, nsim)
 Y<-matrix(0, nrow=nrow(College.train),ncol=nsim )
 RMSE.2<-rep(0,nsim)
 # note that we had log-transformed the response; hence we need to exponentiate the simulated responses
 for(j in 1:nsim){
-  Y[,j]<-exp(X %*% params@coef[j,] + rnorm(1, 0, params@sigma[j]))
+  Y[,j]<-exp(X %*% params@coef[j,]+ rnorm(1, 0, params@sigma[j]))
   RMSE.2[j]<-rmse(Y[,j],exp(predict(app_best)))
   
 }
