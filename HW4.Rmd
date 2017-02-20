@@ -2,9 +2,7 @@
 title: 'HW4: Team 12'
 author: "Thomas Fleming, Blaire Li, Marc Ryser, Hengqian Zhang"
 date: "Due February 17, 2016"
-output:
-pdf_document: default
-html_notebook: default
+output: pdf_document
 ---
 
 
@@ -530,7 +528,6 @@ for (s in 1:S) {
 }
 
 rmse.nb.df = data.frame(rsme.test.nb = rmse.test.nb, rmse.rep.nb = rmse.rep.nb)
-rmse.nb.df
 rmse.rep.nb = as.data.frame(rmse.rep.nb)
 
 hist.nb <-ggplot(data= rmse.rep.nb, aes(x=rmse.rep.nb)) + geom_histogram(fill = "slateblue") + geom_vline(xintercept = rmse.train.nb, color = "red") + geom_vline(xintercept = rmse.test.nb, col="cornflowerblue") + xlab("RMSE") + ylab("Count")
@@ -700,7 +697,7 @@ gp
 
 #plot for Apps.nb
 df = data.frame(apps = College.test$Apps, 
-                pred = predict(Apps.nb,College.test[,-17],type="response"),  
+                pred = predict.glm(Apps.nb,College.test[,-17],type="response"),  
                 lwr = pi.nb[,1], upr=pi.nb[,2]) 
 df = df %>% arrange(pred)   # sort by prediction
 
@@ -710,7 +707,7 @@ gp = ggplot(df, aes(x=pred, y=apps)) +
   geom_point(aes(y=apps)) +
   xlab("predicted value") +
   ylab("Apps") +
-  ggtitle("95% Prediction Intervals under Negative Binomial Model(Apps.nb")
+  ggtitle("95% Prediction Intervals under Negative Binomial Model(Apps.nb)")
 gp
 ```
 ```{r}
@@ -742,12 +739,14 @@ It also has a great coverage of 0.94. Predictive check p-value is also bigger th
 
 18.  For your "best" model  provide a nicely formatted table (use `kable()` or `xtable()`) of relative risks and 95% confidence intervals.  Pick 5 of the most important variables and provide a paragraph that provides an interpretation of the parameters (and intervals) that can be provided to a university admissions officer about which variables increase admissions. 
 ```{r}
+summary(app_best)
+```
+
+```{r,results='asis'}
 #since our best model is linear regression model, relative risk doesn't make much sense here, so we just
 #provide the coefficient estimates and the confidence intervals.
-summary(app_best)
-out = cbind(app_best$coefficients,confint(app_best))
-kable(out)
-
+out = as.data.frame(cbind(app_best$coefficients,confint(app_best)))
+kable(out,col.names = c("coef estimates","2.5% CI","97.5% CI"))
 ```
 
 ```{r}
