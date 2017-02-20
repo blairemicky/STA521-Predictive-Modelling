@@ -578,9 +578,9 @@ pi.poi = t(apply(Y, 1, function(x) {quantile(x, c((1 - .95)/2,.5 + .95/2))}))
 # Simulate 1000 replicates
 S = 1000
 n<-nrow(College.test)
-qp.sim = sim(model, n.sims = 1000)
+qp.sim = sim(Apps.qpoi.2, n.sims = 1000)
 # Generate the design matrix 
-X.q = model.matrix(model, data = College.test[,-17])
+X.q = model.matrix(Apps.qpoi.2, data = College.test[,-17])
 # Allocate the output 
 Y.q = matrix(NA, nrow(College.test[,-17]), ncol = S)
 # ????? should be the square, correct????
@@ -591,7 +591,7 @@ for (s in 1:S) {
   # generate the response realization
   Y.q[, s] = rnegbin(n, mu=mu, theta=mu/(d-1))
 }
-pi.qpoi.2 = t(apply(Y, 1, function(x) {quantile(x, c((1 - .95)/2,.5 + .95/2))}))
+pi.qpoi.2 = t(apply(Y.q, 1, function(x) {quantile(x, c((1 - .95)/2,.5 + .95/2))}))
 
 ```
 
@@ -636,6 +636,7 @@ b =coverage(app_best,College.test[,-17])
 c =coverage(Apps.poi,College.test[,-17])
 d =coverage(Apps.qpoi.2,College.test[,-17])
 e =coverage(Apps.nb,College.test[,-17])
+a;b;c;d;e
 ```
 ```{r}
 #plots of the confidence intervals versus ordered by the prediction, with the left out data added as points
@@ -713,26 +714,42 @@ gp = ggplot(df, aes(x=pred, y=apps)) +
   ggtitle("95% Prediction Intervals under Negative Binomial Model(Apps.nb")
 gp
 ```
+```{r}
+College.test %>%
+          filter(Apps>40000)%>%
+          select(college)
 
+```
 
-
-
-
+From the plots, it appears that only the first two, which are both linear regression models, indicate good coverage. In addition, the quasipoisson model also provides a very good coverage. The other two glm models seem to provide bad coverage for prediction, probably due to overfitting. 
+From the plot, it can be observed that one point(Rutgers at New Brunswick) has unusually high y value, and the models seems to predict poorly on that outlier point.           
 
 
 17.  Provide a table  with 
 the 1) RMSE's on the observed data, 2) RMSE's on the test data, 3) coverage, 4) the predictive check p-value with one row for each of the 5 models and comment the results.  Which model do you think is best and why? 
 ```{r}
-RMSE_o = c(RMSE.1,RMSE.1.bestlm,rmse.train.poi,rmse.qpoi.train,rmse.train.nb)
-RMSE_t = c(RMSE.0.test, RMSE.best.test,rmse.test, rmse.qpoi.test,rmse.test.nb)
+RMSE_obs = c(RMSE.1,RMSE.1.bestlm,rmse.train.poi,rmse.qpoi.train,rmse.train.nb)
+RMSE_test = c(RMSE.0.test, RMSE.best.test,rmse.test, rmse.qpoi.test,rmse.test.nb)
 coverage = c(a,b,c,d,e)
 pvalue = c(pval.lm,pval.best,pval.poi,pval.train,pval.nb)
 row =c("apps.lm0","app_best","Apps.poi","Apps.qpoi.2","Apps.nb")
-out = data.frame(row.names = row,RMSE_o,RMSE_t,coverage,pvalue)
+out = data.frame(row.names = row,RMSE_obs,RMSE_test,coverage,pvalue)
 kable(out)
 ```
 
-18.  For your "best" model  provide a nicely formatted table (use `kable()` or `xtable()`) of relative risks and 95% confidence intervals.  Pick 5 of the most important variables and provide a paragraph that provides an interpretation of the parameters (and intervals) that can be provided to a university admissions officer about which variables increase admissions.  
+I think app_best, which is the linear regression model with transformations and interactions added.
+From the table, app_best's RMSE on the observed data and on the test data are relatively small, compared to the other models.
+It also has a great coverage of 0.94. Predictive check p-value is also bigger than 0.05, and it appears to be a good fit.
+
+18.  For your "best" model  provide a nicely formatted table (use `kable()` or `xtable()`) of relative risks and 95% confidence intervals.  Pick 5 of the most important variables and provide a paragraph that provides an interpretation of the parameters (and intervals) that can be provided to a university admissions officer about which variables increase admissions. 
+```{r}
+summary(app_best)
+confint(app_best)
+```
+```{r}
+exp(app_best$coefficients)
+```
+
 
 ### Some Theory   
 
