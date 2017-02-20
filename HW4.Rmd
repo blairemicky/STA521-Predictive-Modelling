@@ -2,7 +2,8 @@
 title: 'HW4: Team 12'
 author: "Thomas Fleming, Blaire Li, Marc Ryser, Hengqian Zhang"
 date: "Due February 17, 2016"
-output: pdf_document
+output:
+  html_document: default
 ---
 
 
@@ -214,6 +215,7 @@ app_best = step(app_lm_t2, k=log(nrow(College.train)),trace=0)
 
 summary(app_best)
 #diagnostic plots
+par(mfrow=c(2,2))
 plot(app_best,labels.id = College.train$college)
 
 # Termplots for further diagnostics
