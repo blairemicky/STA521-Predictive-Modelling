@@ -519,7 +519,7 @@ Y.nb = matrix(NA, nrow(College.train), ncol = S)
 beta.nb@sigma = rnorm(S, Apps.nb$theta, Apps.nb$SE.theta)
 
 rmse.train.nb = rmse(predict(Apps.nb), College.train$Apps)
-rmse.test.nb = rmse(predict(Apps.nb), College.test$Apps)
+rmse.test.nb = rmse(predict(Apps.nb, newdata = College.test), College.test$Apps)
 rmse.rep.nb = rep(0, S)
 rmse.test.nb
 
@@ -542,7 +542,7 @@ print(pval.nb)
 ANSWER: From the histogram, it is clear that the Negative Binomial helps to explain more of the variation in the data than the Poisson or Quasi-Poisson. Judging from the small RMSE for the training data, we may be overfitting the data. The RMSE of the test set is closer to the mean of the simulations than those of the former, but the p-value is small at  'r pval', indicating that we should be careful when using the model for prediction purposes!
 
 16.  While RMSE is a popular summary for model goodness of fit, coverage of confidence intervals is an alternative.
-For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals.   If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
+For each case in the test set, find a 95% prediction interval.  Now evaluate if the responses in the test data are inside or outside of the intervals. If we have the correct coverage, we would expect that at least 95\% of the intervals would contain the test cases.
 Write a function to calculate coverage (the input should be the fitted model object and the test data-frame) and then evaluate coverage for each of the 5 models that you fit  (the two normal, the two Poisson and the negative binomial) including plots of the confidence intervals versus ordered by the prediction, with the left out data added as points.  Comment on the plots, highlighting any unusual colleges where the model predicts poorly.
 
 ```{r}
@@ -593,12 +593,19 @@ nsim=1000
 require(mvtnorm)
 n = nrow(College.test)
 X = model.matrix(Apps.nb, data=College.test[,-17])
-beta = rmvnorm(nsim, coef(Apps.nb), vcov(Apps.nb)) 
-theta = rnorm(nsim, Apps.nb$theta, Apps.nb$SE.theta) 
+class(Apps.nb)<-"glm"
+sim.nb<-sim(Apps.nb, nsim)
+sim.nb@sigma<-rnorm(nsim, Apps.nb$theta, Apps.nb$SE.theta)
+
+
+#beta = rmvnorm(nsim, coef(Apps.nb), vcov(Apps.nb)) 
+#theta = rnorm(nsim, Apps.nb$theta, Apps.nb$SE.theta) 
 y.rep = matrix(NA, nsim, n)
 for (i in 1:nsim) {
-  mu = exp(X %*% beta[i,])
-  y.rep[i,] = rnegbin(n, mu=mu, theta=theta[i]) }
+  mu = exp(X %*% sim.nb@coef[i,])
+  y.rep[i,] = rnegbin(n, mu=mu, theta=sim.nb@sigma[i])
+  
+  }
 
 pi.nb = t(apply(y.rep, 2, function(x) {quantile(x, c((1 - .95)/2,.5 + .95/2))}))
 ```
