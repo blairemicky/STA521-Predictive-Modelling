@@ -235,16 +235,6 @@ rmse = function(y, ypred){
   rmse=sqrt(mean((y-ypred)^2))
   return(rmse)
 }
-#
-#X<-model.matrix(log(Apps) ~ Private + log(Top10perc) + Top25perc + 
-#                  log(F.Undergrad) + log(P.Undergrad) + Outstate + 
-#                  Room.Board + log(PhD) + log(S.F.Ratio) + 
-#                  log(Expend) + Grad.Rate + Private:Room.Board + 
-#                  log(Top10perc):Top25perc + log(Top10perc):log(Expend) +  
-#                  log(P.Undergrad):Outstate + Outstate:log(Expend) + 
-#                  Room.Board:log(Expend) + log(S.F.Ratio):Grad.Rate + 
-#                  log(Expend):Grad.Rate, 
-#                data = College.train)
 X<-model.matrix(app_best, 
                 data = College.train)
 params<-sim(app_best, nsim)
